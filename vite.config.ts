@@ -20,6 +20,7 @@ export default defineConfig(() => {
       rollupOptions: {
         input: {
           index: 'index.html',
+          popup: 'popup.html',
           injection: 'src/injection/index.ts',
           main: 'src/main.tsx',
         },

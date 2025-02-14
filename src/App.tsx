@@ -1,10 +1,10 @@
-import Interceptors from '@/components/Interceptors';
+import RootEntry from '@/components/RootEntry';
 
 function App() {
 
   return (
     <>
-      <Interceptors />
+      <RootEntry />
     </>
   );
 }

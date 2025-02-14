@@ -1,13 +1,11 @@
-import InterceptorItem from './InterceptorItem';
+import Item from './Item';
 
 const Interceptors = () => {
-
   return (
     <>
-      <InterceptorItem />
+      <Item />
     </>
   );
-
 };
 
 export default Interceptors;
