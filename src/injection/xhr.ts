@@ -12,6 +12,8 @@ class XMLHttpRequest extends OriginalXMLHttpRequest {
     requestHeaderSettings: Record<string, string>;
     eventHandler: (e: any, callback: (e: any) => any) => any;
     listenerMap: Map<any, any>;
+    response?: any;
+    responseText?: string;
   };
 
   constructor() {
@@ -43,30 +45,6 @@ class XMLHttpRequest extends OriginalXMLHttpRequest {
       eventHandler,
       listenerMap: new Map(),
     };
-
-    let response: any;
-    let responseText: string;
-
-    Object.defineProperties(this, {
-      response: {
-        get: () => {
-          if (typeof response !== 'undefined') {
-            return response;
-          }
-          return super.response;
-        },
-        enumerable: true,
-      },
-      responseText: {
-        get: () => {
-          if (typeof responseText !== 'undefined') {
-            return responseText;
-          }
-          return super.responseText;
-        },
-        enumerable: true,
-      },
-    });
 
     const onRecord: Record<string, any> = {};
     for (const key in this) {
@@ -103,8 +81,8 @@ class XMLHttpRequest extends OriginalXMLHttpRequest {
                 request: ctx,
               });
             }).then(ctx => {
-              response = ctx.body;
-              responseText = ctx.body;
+              this.internalNetpal.response = ctx.body;
+              this.internalNetpal.responseText = ctx.body;
               return ctx;
             });
             break;
@@ -116,7 +94,7 @@ class XMLHttpRequest extends OriginalXMLHttpRequest {
                 request: ctx,
               });
             }).then(ctx => {
-              response = JSON.parse(ctx.body);
+              this.internalNetpal.response = JSON.parse(ctx.body);
               return ctx;
             });
             break;
@@ -184,5 +162,23 @@ class XMLHttpRequest extends OriginalXMLHttpRequest {
   }
 
 }
+
+Object.defineProperty(XMLHttpRequest.prototype, 'response', {
+  get(this: XMLHttpRequest) {
+    if (typeof this.internalNetpal.response !== 'undefined') {
+      return this.internalNetpal.response;
+    }
+    return Object.getOwnPropertyDescriptor(OriginalXMLHttpRequest.prototype, 'response')?.get?.call(this);
+  },
+});
+
+Object.defineProperty(XMLHttpRequest.prototype, 'responseText', {
+  get(this: XMLHttpRequest) {
+    if (typeof this.internalNetpal.responseText !== 'undefined') {
+      return this.internalNetpal.responseText;
+    }
+    return Object.getOwnPropertyDescriptor(OriginalXMLHttpRequest.prototype, 'responseText')?.get?.call(this);
+  },
+});
 
 window.XMLHttpRequest = XMLHttpRequest as unknown as typeof XMLHttpRequest;
