@@ -2,12 +2,17 @@ import type { Middleware } from '@/utils';
 
 export interface RequestContext {
   readonly type: 'fetch' | 'xhr';
-  headers: Record<string, string>;
+  headers: Headers;
   url: URL;
   body: any;
 }
 
-const requestInterceptors: Middleware<RequestContext>[] = [];
+const requestInterceptors: Middleware<RequestContext>[] = [
+  async (ctx, next) => {
+    ctx.headers.set('Hijacked-by', 'netpal');
+    await next();
+  },
+];
 
 export interface ResponseContext {
   body: any;

@@ -3,31 +3,33 @@ import type { RequestContext, ResponseContext } from './interceptor';
 
 const OriginalXMLHttpRequest = window.XMLHttpRequest;
 
+interface InternalNetpal {
+  requestUrl: URL;
+  requestResolved: (ctx: RequestContext) => void;
+  requestPending: Promise<RequestContext>;
+  requestHeaders: Headers;
+  eventHandler: (e: any, callback: (e: any) => any) => any;
+  listenerMap: Map<any, any>;
+  response?: any;
+  responseText?: string;
+}
+
 class XMLHttpRequest extends OriginalXMLHttpRequest {
 
-  internalNetpal: {
-    requestUrl: URL;
-    requestResolved: (ctx: RequestContext) => void;
-    requestPending: Promise<RequestContext>;
-    requestHeaderSettings: Record<string, string>;
-    eventHandler: (e: any, callback: (e: any) => any) => any;
-    listenerMap: Map<any, any>;
-    response?: any;
-    responseText?: string;
-  };
+  public internalNetpal: InternalNetpal;
 
   constructor() {
 
     super();
 
-    let requestResolved!: XMLHttpRequest['internalNetpal']['requestResolved'];
-    const requestPending: XMLHttpRequest['internalNetpal']['requestPending'] = new Promise(resolve => {
+    let requestResolved!: InternalNetpal['requestResolved'];
+    const requestPending: InternalNetpal['requestPending'] = new Promise(resolve => {
       requestResolved = resolve;
     });
 
     let responsePending: Promise<ResponseContext>;
 
-    const eventHandler: XMLHttpRequest['internalNetpal']['eventHandler'] = (e, callback) => {
+    const eventHandler: InternalNetpal['eventHandler'] = (e, callback) => {
       if (responsePending) {
         responsePending.then(() => {
           callback.call(this, e);
@@ -38,39 +40,15 @@ class XMLHttpRequest extends OriginalXMLHttpRequest {
     };
 
     this.internalNetpal = {
-      requestUrl: new URL(location.href),
+      requestUrl: undefined!,
       requestResolved,
       requestPending,
-      requestHeaderSettings: {},
+      requestHeaders: new Headers(),
       eventHandler,
       listenerMap: new Map(),
     };
 
-    const onRecord: Record<string, any> = {};
-    for (const key in this) {
-      if (key.startsWith('on')) {
-        Object.defineProperty(this, key, {
-          get() {
-            return onRecord[key];
-          },
-          set: (value) => {
-            onRecord[key] = value;
-            if (typeof value === 'function') {
-              // @ts-ignore
-              super[key] = (e: any) => {
-                eventHandler(e, value);
-              };
-            } else {
-              // @ts-ignore
-              super[key] = value;
-            }
-          },
-          configurable: true,
-        });
-      }
-    }
-
-    this.addEventListener('readystatechange', () => {
+    super.addEventListener('readystatechange', () => {
       const responseType = super.responseType || 'text';
       if (this.readyState === OriginalXMLHttpRequest.DONE) {
         switch (responseType) {
@@ -113,11 +91,11 @@ class XMLHttpRequest extends OriginalXMLHttpRequest {
   }
 
   setRequestHeader(name: string, value: string): void {
-    this.internalNetpal.requestHeaderSettings[name] = value;
+    this.internalNetpal.requestHeaders.set(name, value);
     this.internalNetpal.requestPending.then((ctx) => {
-      Object.keys(ctx.headers).forEach(header => {
-        super.setRequestHeader(header, ctx.headers[header]);
-      });
+      if (ctx.headers.has(name)) {
+        super.setRequestHeader(name, ctx.headers.get(name)!);
+      }
     });
   }
 
@@ -152,15 +130,31 @@ class XMLHttpRequest extends OriginalXMLHttpRequest {
       type: 'xhr',
       url: this.internalNetpal.requestUrl,
       body,
-      headers: this.internalNetpal.requestHeaderSettings,
+      headers: new Headers(this.internalNetpal.requestHeaders),
     }).then((ctx) => {
       this.internalNetpal.requestResolved(ctx);
       return this.internalNetpal.requestPending;
     }).then(ctx => {
+      ctx.headers.forEach((value, name) => {
+        if (!this.internalNetpal.requestHeaders.has(name)) {
+          super.setRequestHeader(name, value);
+        }
+      });
       super.send(ctx.body);
     });
   }
 
+}
+
+function getDescriptor(proto: any, prop: string) {
+  while (proto) {
+    const descriptor = Object.getOwnPropertyDescriptor(proto, prop);
+    if (descriptor) {
+      return descriptor;
+    }
+    proto = Object.getPrototypeOf(proto);
+  }
+  return null;
 }
 
 Object.defineProperty(XMLHttpRequest.prototype, 'response', {
@@ -168,7 +162,7 @@ Object.defineProperty(XMLHttpRequest.prototype, 'response', {
     if (typeof this.internalNetpal.response !== 'undefined') {
       return this.internalNetpal.response;
     }
-    return Object.getOwnPropertyDescriptor(OriginalXMLHttpRequest.prototype, 'response')?.get?.call(this);
+    return getDescriptor(OriginalXMLHttpRequest.prototype, 'response')?.get?.call(this);
   },
 });
 
@@ -177,8 +171,31 @@ Object.defineProperty(XMLHttpRequest.prototype, 'responseText', {
     if (typeof this.internalNetpal.responseText !== 'undefined') {
       return this.internalNetpal.responseText;
     }
-    return Object.getOwnPropertyDescriptor(OriginalXMLHttpRequest.prototype, 'responseText')?.get?.call(this);
+    return getDescriptor(OriginalXMLHttpRequest.prototype, 'responseText')?.get?.call(this);
   },
+});
+
+const keys = [
+  'onreadystatechange',
+  ...Object.getOwnPropertyNames(XMLHttpRequestEventTarget.prototype).filter(key => key.startsWith('on')),
+] as (keyof typeof OriginalXMLHttpRequest.prototype)[];
+keys.forEach(key => {
+  Object.defineProperty(XMLHttpRequest.prototype, key, {
+    get(this: XMLHttpRequest) {
+      return this.internalNetpal.listenerMap.get(key);
+    },
+    set(this: XMLHttpRequest, value) {
+      this.internalNetpal.listenerMap.set(key, value);
+      if (typeof value === 'function') {
+        getDescriptor(OriginalXMLHttpRequest.prototype, key)?.set?.call(this, (e: any) => {
+          this.internalNetpal.eventHandler(e, value);
+        });
+      } else {
+        getDescriptor(OriginalXMLHttpRequest.prototype, key)?.set?.call(this, value);
+      }
+    },
+    configurable: true,
+  });
 });
 
 window.XMLHttpRequest = XMLHttpRequest as unknown as typeof XMLHttpRequest;

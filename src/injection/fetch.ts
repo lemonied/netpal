@@ -84,14 +84,10 @@ const customFetch: typeof window.fetch = async (input, init) => {
   const requestCtx = await compose(window.netpalInterceptors.request)({
     type: 'fetch',
     url: new URL(request.url),
-    headers: Array.from(request.headers.entries()).reduce<Record<string, string>>((pre, current) => {
-      pre[current[0]] = current[1];
-      return pre;
-    }, {}),
+    headers: new Headers(request.headers),
     body: requestBody.value,
   });
-  const response = await originalFetch(requestCtx.url, {
-    ...request,
+  const response = await originalFetch(request, {
     headers: requestCtx.headers,
     body: requestBody.value,
   });
