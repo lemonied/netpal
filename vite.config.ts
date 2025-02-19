@@ -16,7 +16,6 @@ export default defineConfig(() => {
       },
     },
     build: {
-      outDir: 'dist',
       rollupOptions: {
         input: {
           index: 'index.html',
@@ -26,7 +25,7 @@ export default defineConfig(() => {
         },
         output: [
           {
-            entryFileNames: '[name].es.js',
+            entryFileNames: '[name].js',
             dir: 'dist',
             format: 'es',
           },

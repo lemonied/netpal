@@ -1,14 +1,14 @@
-import { compose } from '@/utils';
+import { compose, getDescriptor, transformUrl, url2string } from '@/utils';
 import type { RequestContext, ResponseContext } from './interceptor';
 
 const OriginalXMLHttpRequest = window.XMLHttpRequest;
 
 interface InternalNetpal {
-  requestUrl: URL;
+  requestUrl: URL | string;
   requestResolved: (ctx: RequestContext) => void;
   requestPending: Promise<RequestContext>;
   requestHeaders: Headers;
-  eventHandler: (e: any, callback: (e: any) => any) => any;
+  eventHandler: (callback: (...args: any[]) => any, args: any[]) => any;
   listenerMap: Map<any, any>;
   response?: any;
   responseText?: string;
@@ -29,13 +29,13 @@ class XMLHttpRequest extends OriginalXMLHttpRequest {
 
     let responsePending: Promise<ResponseContext>;
 
-    const eventHandler: InternalNetpal['eventHandler'] = (e, callback) => {
+    const eventHandler: InternalNetpal['eventHandler'] = (callback, args) => {
       if (responsePending) {
         responsePending.then(() => {
-          callback.call(this, e);
+          callback.apply(this, args);
         });
       } else {
-        callback.call(this, e);
+        callback.apply(this, args);
       }
     };
 
@@ -84,9 +84,15 @@ class XMLHttpRequest extends OriginalXMLHttpRequest {
   }
 
   open(method: string, url: string | URL, async?: any, user?: any, password?: any) {
-    this.internalNetpal.requestUrl = new URL(url || '', location.href);
+    this.internalNetpal.requestUrl = url;
     this.internalNetpal.requestPending.then((ctx) => {
-      super.open(method, ctx.url, async, user, password);
+      super.open(
+        method,
+        transformUrl(ctx.url, this.internalNetpal.requestUrl),
+        async,
+        user,
+        password,
+      );
     });
   }
 
@@ -101,8 +107,8 @@ class XMLHttpRequest extends OriginalXMLHttpRequest {
 
   addEventListener(type: string, listener: (e: any) => any, options?: any) {
     this.internalNetpal.requestPending.then(() => {
-      const fn = (e: any) => {
-        this.internalNetpal.eventHandler(e, listener);
+      const fn = (...args: any[]) => {
+        this.internalNetpal.eventHandler(listener, args);
       };
       this.internalNetpal.listenerMap.set(listener, fn);
       super.addEventListener(type, fn, options);
@@ -128,7 +134,7 @@ class XMLHttpRequest extends OriginalXMLHttpRequest {
   send(body?: any): void {
     compose(window.netpalInterceptors.request)({
       type: 'xhr',
-      url: this.internalNetpal.requestUrl,
+      url: url2string(this.internalNetpal.requestUrl),
       body,
       headers: new Headers(this.internalNetpal.requestHeaders),
     }).then((ctx) => {
@@ -144,17 +150,6 @@ class XMLHttpRequest extends OriginalXMLHttpRequest {
     });
   }
 
-}
-
-function getDescriptor(proto: any, prop: string) {
-  while (proto) {
-    const descriptor = Object.getOwnPropertyDescriptor(proto, prop);
-    if (descriptor) {
-      return descriptor;
-    }
-    proto = Object.getPrototypeOf(proto);
-  }
-  return null;
 }
 
 Object.defineProperty(XMLHttpRequest.prototype, 'response', {
@@ -187,8 +182,8 @@ keys.forEach(key => {
     set(this: XMLHttpRequest, value) {
       this.internalNetpal.listenerMap.set(key, value);
       if (typeof value === 'function') {
-        getDescriptor(OriginalXMLHttpRequest.prototype, key)?.set?.call(this, (e: any) => {
-          this.internalNetpal.eventHandler(e, value);
+        getDescriptor(OriginalXMLHttpRequest.prototype, key)?.set?.call(this, (...args: any[]) => {
+          this.internalNetpal.eventHandler(value, args);
         });
       } else {
         getDescriptor(OriginalXMLHttpRequest.prototype, key)?.set?.call(this, value);
@@ -198,4 +193,4 @@ keys.forEach(key => {
   });
 });
 
-window.XMLHttpRequest = XMLHttpRequest as unknown as typeof XMLHttpRequest;
+window.XMLHttpRequest = XMLHttpRequest;
