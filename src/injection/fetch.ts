@@ -1,34 +1,33 @@
-import { compose, getDescriptor, transformUrl, url2string } from '@/utils';
-import type { RequestContext } from './interceptor';
+import { compose } from '@/utils';
+import { RequestContext, ResponseContext } from './interceptor';
 
 const originalFetch = window.fetch;
 
 class FakeResponse extends Response {
-  _url?: string;
-  _type?: string;
-  clone() {
-    const cloned = new FakeResponse(this.body, this);
-    cloned._url = this._url;
-    cloned._type = this._type;
-    return cloned;
-  }
-}
-Object.defineProperty(FakeResponse.prototype, 'url', {
-  get(this: FakeResponse) {
+  private readonly _url?: string;
+  private readonly _type?: ResponseType;
+  get url() {
     if (typeof this._url === 'string') {
       return this._url;
     }
-    return getDescriptor(Response.prototype, 'url')?.get?.call(this);
-  },
-});
-Object.defineProperty(FakeResponse.prototype, 'type', {
-  get(this: FakeResponse) {
+    return super.url;
+  }
+  get type() {
     if (typeof this._type === 'string') {
       return this._type;
     }
-    return getDescriptor(Response.prototype, 'type')?.get?.call(this);
-  },
-});
+    return super.type;
+  }
+  constructor(body?: BodyInit | null, init?: ResponseInit, extraOption?: Pick<Response, 'url' | 'type'>) {
+    super(body, init);
+    this._url = extraOption?.url;
+    this._type = extraOption?.type;
+  }
+  clone() {
+    const cloned = new FakeResponse(this.body, this);
+    return cloned;
+  }
+}
 
 async function determineBodyType(instance: Request | Response) {
 
@@ -118,25 +117,29 @@ const customFetch: typeof window.fetch = async (input, init) => {
   if (input instanceof Request) {
     const request = input;
     const requestBody = await determineBodyType(request);
-    requestCtx = await compose(window.netpalInterceptors.request)({
-      type: 'fetch',
-      url: request.url,
-      headers: new Headers(request.headers),
-      body: requestBody.value,
-    });
+    requestCtx = await compose(window.netpalInterceptors.request)(
+      new RequestContext({
+        type: 'fetch',
+        url: request.url,
+        headers: new Headers(request.headers),
+        body: requestBody.value,
+      }),
+    );
     response = await originalFetch(request, {
       headers: requestCtx.headers,
       body: requestCtx.body,
     });
   } else {
-    requestCtx = await compose(window.netpalInterceptors.request)({
-      type: 'fetch',
-      url: url2string(input),
-      headers: new Headers(init?.headers),
-      body: init?.body,
-    });
+    requestCtx = await compose(window.netpalInterceptors.request)(
+      new RequestContext({
+        type: 'fetch',
+        url: input,
+        headers: new Headers(init?.headers),
+        body: init?.body,
+      }),
+    );
     response = await originalFetch(
-      transformUrl(requestCtx.url, input),
+      requestCtx.getTransformedURL(),
       {
         ...init,
         headers: requestCtx.headers,
@@ -145,17 +148,20 @@ const customFetch: typeof window.fetch = async (input, init) => {
     );
   }
   const responseBody = await determineBodyType(response);
-  const responseCtx = await compose(window.netpalInterceptors.response)({
-    request: requestCtx,
-    body: responseBody.value,
-  });
+  const responseCtx = await compose(window.netpalInterceptors.response)(
+    new ResponseContext({
+      request: requestCtx,
+      body: responseBody.value,
+    }),
+  );
   const mergedResponse = new FakeResponse(responseCtx.body, {
     headers: response.headers,
     status: response.status,
     statusText: response.statusText,
+  }, {
+    url: response.url,
+    type: response.type,
   });
-  mergedResponse._url = response.url;
-  mergedResponse._type = response.type;
   return mergedResponse;
 };
 

@@ -1,12 +1,21 @@
 import React from 'react';
-import { styled } from '@mui/material';
+import { styled, Paper } from '@mui/material';
 
-const Wrapper = styled('div')`
+const Wrapper = styled(Paper)`
   position: fixed;
   left: 0;
   right: 0;
   bottom: 0;
   z-index: 100000;
+
+  .header {
+
+  }
+
+  .scroll-content {
+
+  }
+
 `;
 
 interface SharedProps {
@@ -21,6 +30,7 @@ const Content = (props: SharedProps) => {
 
   return (
     <Wrapper
+      elevation={3}
       style={{
         height,
       }}

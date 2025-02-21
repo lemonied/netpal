@@ -1,5 +1,5 @@
-import { compose, getDescriptor, transformUrl, url2string } from '@/utils';
-import type { RequestContext, ResponseContext } from './interceptor';
+import { compose, getDescriptor } from '@/utils';
+import { RequestContext, ResponseContext } from './interceptor';
 
 const OriginalXMLHttpRequest = window.XMLHttpRequest;
 
@@ -54,10 +54,12 @@ class XMLHttpRequest extends OriginalXMLHttpRequest {
         switch (responseType) {
           case 'text': {
             responsePending = requestPending.then(ctx => {
-              return compose(window.netpalInterceptors.response)({
-                body: super.responseText,
-                request: ctx,
-              });
+              return compose(window.netpalInterceptors.response)(
+                new ResponseContext({
+                  body: super.responseText,
+                  request: ctx,
+                }),
+              );
             }).then(ctx => {
               this.internalNetpal.response = ctx.body;
               this.internalNetpal.responseText = ctx.body;
@@ -67,10 +69,12 @@ class XMLHttpRequest extends OriginalXMLHttpRequest {
           }
           case 'json': {
             responsePending = requestPending.then(ctx => {
-              return compose(window.netpalInterceptors.response)({
-                body: JSON.stringify(super.response),
-                request: ctx,
-              });
+              return compose(window.netpalInterceptors.response)(
+                new ResponseContext({
+                  body: JSON.stringify(super.response),
+                  request: ctx,
+                }),
+              );
             }).then(ctx => {
               this.internalNetpal.response = JSON.parse(ctx.body);
               return ctx;
@@ -88,7 +92,7 @@ class XMLHttpRequest extends OriginalXMLHttpRequest {
     this.internalNetpal.requestPending.then((ctx) => {
       super.open(
         method,
-        transformUrl(ctx.url, this.internalNetpal.requestUrl),
+        ctx.getTransformedURL(),
         async,
         user,
         password,
@@ -132,12 +136,14 @@ class XMLHttpRequest extends OriginalXMLHttpRequest {
   }
 
   send(body?: any): void {
-    compose(window.netpalInterceptors.request)({
-      type: 'xhr',
-      url: url2string(this.internalNetpal.requestUrl),
-      body,
-      headers: new Headers(this.internalNetpal.requestHeaders),
-    }).then((ctx) => {
+    compose(window.netpalInterceptors.request)(
+      new RequestContext({
+        type: 'xhr',
+        url: this.internalNetpal.requestUrl,
+        body,
+        headers: new Headers(this.internalNetpal.requestHeaders),
+      }),
+    ).then((ctx) => {
       this.internalNetpal.requestResolved(ctx);
       return this.internalNetpal.requestPending;
     }).then(ctx => {
