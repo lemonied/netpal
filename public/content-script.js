@@ -21,17 +21,4 @@
     }
   }, 200);
 
-  window.addEventListener('message', (e) => {
-    if (e.data && e.data.type === 'netpal-message-send') {
-      chrome.runtime.sendMessage(e.data.data, (res) => {
-        window.postMessage({
-          type: 'netpal-message-receive',
-          data: res,
-        }, '*');
-      });
-    }
-  });
-
-  chrome.runtime.onMessage();
-
 })();
