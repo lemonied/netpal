@@ -23,8 +23,8 @@ export default defineConfig(() => {
           sandbox: 'sandbox.html',
           injection: 'src/injection/index.ts',
           main: 'src/main.tsx',
-          'content-script': 'src/extensions/content-script.ts',
-          'service-worker': 'src/extensions/service-worker.ts',
+          'content-script': 'src/extensions/content-script/index.ts',
+          'service-worker': 'src/extensions/service-worker/index.ts',
         },
         output: [
           {

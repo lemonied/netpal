@@ -22,9 +22,11 @@
   }, 200);
 
   if (window.top === window) {
-    const sandbox = document.createElement('iframe');
-    sandbox.src = chrome.runtime.getURL('sandbox.html');
-    document.body.appendChild(sandbox);
+    window.addEventListener('load', () => {
+      const sandbox = document.createElement('iframe');
+      sandbox.src = chrome.runtime.getURL('sandbox.html');
+      document.body.appendChild(sandbox);
+    });
   }
-
+  
 })();

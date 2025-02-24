@@ -48,69 +48,44 @@ async function determineBodyType(instance: Request | Response) {
     };
   }
 
-  try {
-    const value = await instance.clone().json();
-    return {
-      type: 'json',
-      value: JSON.stringify(value),
-    };
-  } catch {
-    // not json
+  const contentType = instance.headers.get('content-type');
+
+  if ([
+    'text/html',
+    'text/plain',
+    'text/xml',
+    'text/javascript',
+    'text/css',
+    'application/xml',
+  ].some(value => contentType?.includes(value))) {
+    try {
+      const value = await instance.clone().text();
+      return {
+        type: 'text',
+        value,
+      };
+    } catch {
+      // not text
+    }
   }
 
-  try {
-    const value = await instance.clone().text();
-    return {
-      type: 'text',
-      value,
-    };
-  } catch {
-    // not text
-  }
-
-  try {
-    const value = await instance.clone().arrayBuffer();
-    return {
-      type: 'arrayBuffer',
-      value,
-    };
-  } catch {
-    // not arrayBuffer
-  }
-
-  try {
-    const value = await instance.clone().blob();
-    return {
-      type: 'blob',
-      value,
-    };
-  } catch {
-    // not blob
-  }
-
-  try {
-    const value = await instance.clone().bytes();
-    return {
-      type: 'bytes',
-      value,
-    };
-  } catch {
-    // not blob
-  }
-
-  try {
-    const value = await instance.clone().formData();
-    return {
-      type: 'formData',
-      value,
-    };
-  } catch {
-    // not blob
-  }
+  if ([
+    'application/json',
+  ].some(value => contentType?.includes(value))) {
+    try {
+      const value = await instance.clone().text();
+      return {
+        type: 'json',
+        value,
+      };
+    } catch {
+      // not json
+    }
+  }  
 
   return {
     type: 'unknown',
-    value: null,
+    value: await instance.clone().arrayBuffer(),
   };
 }
 
