@@ -13,13 +13,20 @@
       "js": [
         "content-script.js"
       ],
-      "run_at": "document_start"
+      "run_at": "document_start",
+      "all_frames": true
     }
   ],
+  "sandbox": {
+    "pages": [
+      "sandbox.html"
+    ]
+  },
   "web_accessible_resources": [
     {
       "resources": [
-        "*.js"
+        "*.js",
+        "*.html"
       ],
       "matches": [
         "*://*/*"
@@ -29,6 +36,7 @@
   "permissions": [
     "declarativeNetRequest",
     "declarativeNetRequestFeedback",
+    "scripting",
     "cookies",
     "storage"
   ],

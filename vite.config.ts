@@ -20,8 +20,11 @@ export default defineConfig(() => {
         input: {
           index: 'index.html',
           popup: 'popup.html',
+          sandbox: 'sandbox.html',
           injection: 'src/injection/index.ts',
           main: 'src/main.tsx',
+          'content-script': 'src/extensions/content-script.ts',
+          'service-worker': 'src/extensions/service-worker.ts',
         },
         output: [
           {
