@@ -1,28 +1,18 @@
+import { removeItem } from '@/utils';
 
-let requestInterceptors: Window['netpalInterceptors']['request'] = [];
-let responseInterceptors: Window['netpalInterceptors']['response'] = [];
-
-function clearInterceptors() {
-  requestInterceptors.forEach(item => {
-    const index = window.netpalInterceptors.request.findIndex(v => v === item);
-    if (index > -1) {
-      window.netpalInterceptors.request.splice(index, 1);
-    }
-  });
-  responseInterceptors.forEach(item => {
-    const index = window.netpalInterceptors.response.findIndex(v => v === item);
-    if (index > -1) {
-      window.netpalInterceptors.response.splice(index, 1);
-    }
-  });
-}
-
-async function reload(reqI10s: typeof requestInterceptors, resI10s: typeof responseInterceptors) {
-  clearInterceptors();
-  requestInterceptors = reqI10s;
-  responseInterceptors = resI10s;
-  window.netpalInterceptors.request.push(...requestInterceptors);
-  window.netpalInterceptors.response.push(...responseInterceptors);
+const interceptors: Window['netpalInterceptors'] = {
+  request: [],
+  response: [],
 };
+
+async function reload() {
+  interceptors.request.forEach(item => removeItem(window.netpalInterceptors.request, item));
+  interceptors.response.forEach(item => removeItem(window.netpalInterceptors.response, item));
+  interceptors.request = [];
+  interceptors.response = [];
+  window.netpalInterceptors.request.push(...interceptors.request);
+  window.netpalInterceptors.response.push(...interceptors.response);
+};
+
 
 (window as any).netpalReload = reload;
