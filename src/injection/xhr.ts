@@ -14,6 +14,18 @@ interface InternalNetpal {
   responseText?: string;
 }
 
+function getHeaders(headersStr: string) {
+  const arr = headersStr.trim().split(/[\r\n]+/);
+  const headers = new Headers();
+  arr.forEach((line) => {
+    const parts = line.split(': ');
+    const header = parts.shift()!;
+    const value = parts.join(': ');
+    headers.set(header, value);
+  });
+  return headers;
+}
+
 class XMLHttpRequest extends OriginalXMLHttpRequest {
 
   public internalNetpal: InternalNetpal;
@@ -58,6 +70,8 @@ class XMLHttpRequest extends OriginalXMLHttpRequest {
                 new ResponseContext({
                   body: super.responseText,
                   request: ctx,
+                  headers: getHeaders(super.getAllResponseHeaders()),
+                  status: super.status,
                 }),
               );
             }).then(ctx => {
@@ -73,6 +87,8 @@ class XMLHttpRequest extends OriginalXMLHttpRequest {
                 new ResponseContext({
                   body: JSON.stringify(super.response),
                   request: ctx,
+                  headers: getHeaders(super.getAllResponseHeaders()),
+                  status: super.status,
                 }),
               );
             }).then(ctx => {

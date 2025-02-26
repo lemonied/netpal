@@ -1,4 +1,7 @@
-'use strict';
+import { isBridgeMessage, randomStr } from '@/utils';
+import type { BrigdeMessage } from '@/utils';
+
+const isTop = window === window.top;
 
 (() => {
 
@@ -12,50 +15,65 @@
     head.appendChild(injection);
   }
 
-  window.setTimeout(() => {
-    if (window.top === window) {
+  if (isTop) {
+    window.setTimeout(() => {
       const main = document.createElement('script');
       main.src = chrome.runtime.getURL('main.js');
       main.type = 'module';
       document.body.appendChild(main);
-    }
-  }, 200);
-  
+    }, 200);
+  }
   
 })();
+
 (() => {
 
-  const map = new Map<string, (value: any) => void>();
-
-  const sandbox = document.createElement('iframe');
-  sandbox.src = chrome.runtime.getURL('sandbox.html');
-
-  async function evaluateScript(code: string) {
-    const key = `evaluate_${Math.random().toString(36).slice(2, 2 + 10)}`;
-    sandbox.contentWindow?.postMessage({
-      type: 'netpal-script-evaluate',
-      key,
-      data: code,
-    }, '*');
-    return await new Promise<any>((resolve) => {
-      map.set(key, resolve);
+  let sandbox: HTMLIFrameElement | undefined;
+  
+  if (isTop) {
+    sandbox = document.createElement('iframe');
+    sandbox.src = chrome.runtime.getURL('sandbox.html');
+    sandbox.style.display = 'none';
+    const sandboxKey = randomStr('sandbox');
+    window.addEventListener('load', () => {
+      document.body.appendChild(sandbox!);
+      sandbox!.contentWindow?.addEventListener('message', (e) => {
+        const data = e.data;
+        if (isBridgeMessage(data) && !data.footprints.includes(sandboxKey)) {
+          data.footprints.push(sandboxKey);
+          window.postMessage(data, '*');
+        }
+      });
     });
   }
 
-  window.addEventListener('load', () => {
-    document.body.appendChild(sandbox);
-    sandbox.contentWindow?.addEventListener('message', (e) => {
-      const data = e.data;
-      if (data && data.type === 'netpal-script-result') {
-        map.get(data.key)?.(data.data);
-        map.delete(data.key);
+  const windowKey = randomStr('window');
+  window.addEventListener('message', (e) => {
+    const data = e.data;
+    if (isBridgeMessage(data) && !data.footprints.includes(windowKey)) {
+      const nextData: BrigdeMessage = {
+        ...data,
+        footprints: [...data.footprints, windowKey],
+      };
+      chrome.runtime.sendMessage(nextData);
+      if (sandbox?.contentWindow) {
+        sandbox.contentWindow.postMessage(nextData, '*');
+      } else if (isTop) {
+        window.postMessage({
+          ...nextData,
+          footprints: [windowKey],
+          error: 'sandbox.contentWindow is undefined',
+          type: 'netpal-error',
+        } satisfies BrigdeMessage, '*');
       }
-    });
+    }
   });
 
+  const runtimeKey = randomStr('runtime');
   chrome.runtime.onMessage.addListener((e) => {
-    if (e && e.type === 'netpal-reload-config') {
-      //
+    if (isBridgeMessage(e) && !e.footprints.includes(runtimeKey)) {
+      e.footprints.push(runtimeKey);
+      window.postMessage(e, '*');
     }
   });
 

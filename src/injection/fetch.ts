@@ -130,6 +130,8 @@ const customFetch: typeof window.fetch = async (input, init) => {
     new ResponseContext({
       request: requestCtx,
       body: responseBody.value,
+      headers: response.headers,
+      status: response.status,
     }),
   );
   const mergedResponse = new FakeResponse(responseCtx.body, {

@@ -24,10 +24,14 @@ const requestInterceptors: Middleware<RequestContext>[] = [];
 export class ResponseContext {
   body: any;
   readonly request: Readonly<RequestContext>;
-  constructor(options: Pick<ResponseContext, 'body' | 'request'>) {
-    const { body, request } = options;
+  readonly headers: Headers;
+  readonly status: number;
+  constructor(options: Pick<ResponseContext, 'body' | 'request' | 'headers' | 'status'>) {
+    const { body, request, headers, status } = options;
     this.body = body;
     this.request = request;
+    this.headers = headers;
+    this.status = status;
   }
 }
 
