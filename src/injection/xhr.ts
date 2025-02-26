@@ -15,7 +15,7 @@ interface InternalNetpal {
 }
 
 function getHeaders(headersStr: string) {
-  const arr = headersStr.trim().split(/[\r\n]+/);
+  const arr = headersStr.trim().split(/[\r\n]+/).filter(Boolean);
   const headers = new Headers();
   arr.forEach((line) => {
     const parts = line.split(': ');

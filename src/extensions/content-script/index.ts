@@ -1,5 +1,5 @@
-import { isBridgeMessage, randomStr } from '@/utils';
-import type { BrigdeMessage } from '@/utils';
+import { isBridgeMessage, isBubble, isSink, randomStr } from '@/utils';
+import type { BridgeMessage } from '@/utils';
 
 const isTop = window === window.top;
 
@@ -31,49 +31,62 @@ const isTop = window === window.top;
   let sandbox: HTMLIFrameElement | undefined;
   
   if (isTop) {
+    /**
+     * sandbox
+     */
     sandbox = document.createElement('iframe');
     sandbox.src = chrome.runtime.getURL('sandbox.html');
     sandbox.style.display = 'none';
-    const sandboxKey = randomStr('sandbox');
     window.addEventListener('load', () => {
       document.body.appendChild(sandbox!);
-      sandbox!.contentWindow?.addEventListener('message', (e) => {
-        const data = e.data;
-        if (isBridgeMessage(data) && !data.footprints.includes(sandboxKey)) {
-          data.footprints.push(sandboxKey);
-          window.postMessage(data, '*');
-        }
-      });
     });
   }
-
-  const windowKey = randomStr('window');
+  
   window.addEventListener('message', (e) => {
     const data = e.data;
-    if (isBridgeMessage(data) && !data.footprints.includes(windowKey)) {
-      const nextData: BrigdeMessage = {
-        ...data,
-        footprints: [...data.footprints, windowKey],
-      };
-      chrome.runtime.sendMessage(nextData);
+    if (!isBridgeMessage(data)) {
+      return;
+    }
+    if (isTop && isSink(data)) {
       if (sandbox?.contentWindow) {
-        sandbox.contentWindow.postMessage(nextData, '*');
-      } else if (isTop) {
+        sandbox.contentWindow.postMessage({
+          ...data,
+          direction: 'sink',
+        } satisfies BridgeMessage, '*');
+      } else {
         window.postMessage({
-          ...nextData,
-          footprints: [windowKey],
+          ...data,
           error: 'sandbox.contentWindow is undefined',
           type: 'netpal-error',
-        } satisfies BrigdeMessage, '*');
+          direction: 'bubble',
+        } satisfies BridgeMessage, '*');
       }
     }
+    if (isBubble(data)) {
+      chrome.runtime.sendMessage({
+        ...data,
+        direction: 'bubble',
+      } satisfies BridgeMessage);
+    }
   });
-
+  
   const runtimeKey = randomStr('runtime');
   chrome.runtime.onMessage.addListener((e) => {
-    if (isBridgeMessage(e) && !e.footprints.includes(runtimeKey)) {
-      e.footprints.push(runtimeKey);
-      window.postMessage(e, '*');
+    if (!isBridgeMessage(e)) {
+      return;
+    }
+    if (isBubble(e) && e.runtimeKey !== runtimeKey) {
+      chrome.runtime.sendMessage({
+        ...e,
+        direction: 'sink',
+        runtimeKey,
+      } satisfies BridgeMessage);
+    }
+    if (isSink(e)) {
+      window.postMessage({
+        ...e,
+        direction: 'sink',
+      } satisfies BridgeMessage, '*');
     }
   });
 

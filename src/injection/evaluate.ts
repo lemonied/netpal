@@ -15,13 +15,14 @@ function toSimple(ctx: RequestContext | ResponseContext) {
     return {
       url: ctx.url,
       headers: transformHeaders(ctx.headers),
+      body: typeof ctx.body === 'string' ? ctx.body : undefined,
     } satisfies SimpleRequestContext;
   }
   if (ctx instanceof ResponseContext) {
     return {
       headers: transformHeaders(ctx.headers),
       status: ctx.status,
-      body: ctx.body,
+      body: typeof ctx.body === 'string' ? ctx.body : undefined,
     } satisfies SimpleResponseContext;
   }
   return null;
@@ -53,8 +54,10 @@ function reload(interceptors: TransformedSimpleMiddleware[]) {
   uninstall = [];
   interceptors.forEach(item => {
     const req: Middleware<RequestContext> = async (ctx) => {
-      const obj = await evaluateScript(item.request.fn, ctx);
-      Object.assign(ctx, obj);
+      const obj = await evaluateScript(item.request.fn, ctx) as SimpleRequestContext;
+      ctx.url = obj.url;
+      ctx.body = typeof ctx.body === 'string' ? obj.body : ctx.body;
+      ctx.headers = new Headers(obj.headers);
     };
     window.netpalInterceptors.request.push(req);
     uninstall.push(() => {
