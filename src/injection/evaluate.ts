@@ -1,4 +1,4 @@
-import { randomStr, sendMessage, messageListener } from '@/utils';
+import { sendMessage, messageListener, bridgeReady } from '@/utils';
 import type { Middleware } from '@/utils';
 import { RequestContext, ResponseContext } from './interceptor';
 import type {
@@ -29,13 +29,13 @@ function toSimple(ctx: RequestContext | ResponseContext) {
 }
 
 async function evaluateScript(code: string, ctx: RequestContext | ResponseContext) {
-  const key = randomStr('evaluateScript');
-  return await sendMessage({
-    type: 'netpal-script-evaluate',
-    key,
-    data: `(${code})(${JSON.stringify(toSimple(ctx))})`,
-  });
+  return await sendMessage('netpal-script-evaluate', `(${code})(${JSON.stringify(toSimple(ctx))})`);
 }
+
+window.netpalInterceptors.request.push(async (_, next) => {
+  await bridgeReady();
+  await next();
+});
 
 let uninstall: (() => void)[] = [];
 
@@ -69,8 +69,6 @@ function reload(interceptors: TransformedSimpleMiddleware[]) {
   });
 }
 
-messageListener((e) => {
-  if (e.type === 'netpal-interceptors-reload') {
-    reload(e.data);
-  }
+messageListener('netpal-interceptors-reload', (data) => {
+  reload(data);
 });

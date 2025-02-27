@@ -1,4 +1,4 @@
-import { isBridgeMessage, isBubble, isSink, randomStr } from '@/utils';
+import { isBridgeMessage, isBubble, isSink, messageListener, randomStr } from '@/utils';
 import type { BridgeMessage } from '@/utils';
 
 const isTop = window === window.top;
@@ -29,6 +29,11 @@ const isTop = window === window.top;
 (() => {
 
   let sandbox: HTMLIFrameElement | undefined;
+
+  let sandboxResolve: () => void;
+  const sandboxReady = new Promise<void>((resolve) => {
+    sandboxResolve = resolve;
+  });
   
   if (isTop) {
     /**
@@ -39,55 +44,60 @@ const isTop = window === window.top;
     sandbox.style.display = 'none';
     window.addEventListener('load', () => {
       document.body.appendChild(sandbox!);
+      sandboxResolve();
     });
   }
+  messageListener('netpal-sandbox-ready', (_, resFn) => {
+    /**
+     * is sandbox ready
+     */
+    sandboxReady.then(() => {
+      resFn();
+    });
+  });
   
-  window.addEventListener('message', (e) => {
-    const data = e.data;
-    if (!isBridgeMessage(data)) {
-      return;
-    }
-    if (isTop && isSink(data)) {
-      if (sandbox?.contentWindow) {
-        sandbox.contentWindow.postMessage({
+  (() => {
+    /**
+     * Message transfer
+     */
+    window.addEventListener('message', (e) => {
+      const data = e.data;
+      if (!isBridgeMessage(data)) {
+        return;
+      }
+      if (isTop && isSink(data)) {
+        sandbox?.contentWindow?.postMessage({
           ...data,
           direction: 'sink',
         } satisfies BridgeMessage, '*');
-      } else {
-        window.postMessage({
+      }
+      if (isBubble(data)) {
+        chrome.runtime.sendMessage({
           ...data,
-          error: 'sandbox.contentWindow is undefined',
-          type: 'netpal-error',
           direction: 'bubble',
+        } satisfies BridgeMessage);
+      }
+    });
+    const runtimeKey = randomStr('runtime');
+    chrome.runtime.onMessage.addListener((e) => {
+      if (!isBridgeMessage(e)) {
+        return;
+      }
+      if (isBubble(e) && e.runtimeKey !== runtimeKey) {
+        chrome.runtime.sendMessage({
+          ...e,
+          direction: 'sink',
+          runtimeKey,
+        } satisfies BridgeMessage);
+      }
+      if (isSink(e)) {
+        window.postMessage({
+          ...e,
+          direction: 'sink',
         } satisfies BridgeMessage, '*');
       }
-    }
-    if (isBubble(data)) {
-      chrome.runtime.sendMessage({
-        ...data,
-        direction: 'bubble',
-      } satisfies BridgeMessage);
-    }
-  });
+    });
+  })();
   
-  const runtimeKey = randomStr('runtime');
-  chrome.runtime.onMessage.addListener((e) => {
-    if (!isBridgeMessage(e)) {
-      return;
-    }
-    if (isBubble(e) && e.runtimeKey !== runtimeKey) {
-      chrome.runtime.sendMessage({
-        ...e,
-        direction: 'sink',
-        runtimeKey,
-      } satisfies BridgeMessage);
-    }
-    if (isSink(e)) {
-      window.postMessage({
-        ...e,
-        direction: 'sink',
-      } satisfies BridgeMessage, '*');
-    }
-  });
 
 })();

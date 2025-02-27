@@ -1,23 +1,14 @@
-import { isBridgeMessage } from '@/utils';
-import type { BridgeMessage } from '@/utils';
+import { messageListener } from '@/utils';
 
-window.addEventListener('message', (e) => {
-  const data = e.data;
-  if (isBridgeMessage(data) && data.type === 'netpal-script-evaluate') {
-    const result = window.eval(data.data);
-    const reply = (res: any) => {
-      window.top?.postMessage({
-        type: `${data.type}-reply`,
-        key: data.key,
-        data: res,
-      } satisfies BridgeMessage, '*');
-    };
+messageListener('netpal-script-evaluate', async (data, resolve, reject) => {
+  try {
+    const result = window.eval(data);
     if (result instanceof Promise) {
-      return result.then(res => {
-        reply(res);
-      });
+      resolve(await result);
     } else {
-      reply(result);
+      resolve(result);
     }
+  } catch (e: any) {
+    reject(e?.message);
   }
-});
+}, window.top!);

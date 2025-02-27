@@ -1,10 +1,11 @@
+import { randomStr } from './random';
 
 export const messageTypePrefix = 'netpal-';
 
-export interface BridgeMessage {
+export interface BridgeMessage<T = any> {
   type: `${typeof messageTypePrefix}${string}`;
   key: string;
-  data?: any;
+  data?: T;
   error?: string;
   direction?: 'bubble' | 'sink';
   runtimeKey?: string;
@@ -22,14 +23,19 @@ export function isBridgeMessage(val: unknown): val is BridgeMessage {
   return val && typeof (val as any).type === 'string' && (val as any).type.startsWith(messageTypePrefix);
 }
 
-export function sendMessage(options: BridgeMessage) {
+export function sendMessage<T = any, R = any>(type: BridgeMessage<T>['type'], data?: BridgeMessage<T>['data']) {
 
-  let resolved: (value: any) => void;
+  let resolved: (value: R) => void;
   let rejected: (error: any) => void;
+  const birdgeMessage = {
+    type,
+    key: randomStr(type),
+    data,
+  } satisfies BridgeMessage;
 
   function eventHandler(e: MessageEvent) {
     const data = e.data;
-    if (isBridgeMessage(data) && data.type === `${options.type}-reply` && data.key === options.key) {
+    if (isBridgeMessage(data) && data.type === `${type}-reply` && data.key === birdgeMessage.key) {
       if (data.type === 'netpal-error') {
         rejected(new Error(data.error));
       } else {
@@ -39,22 +45,36 @@ export function sendMessage(options: BridgeMessage) {
     }
   };
 
-  window.postMessage(options satisfies BridgeMessage, '*');
+  window.postMessage(birdgeMessage, '*');
 
   window.addEventListener('message', eventHandler);
 
-  return new Promise<any>((resolve, reject) => {
+  return new Promise<R>((resolve, reject) => {
     resolved = resolve;
     rejected = reject;
   });
 }
 
-export function messageListener(cb: (e: BridgeMessage, res: (e: BridgeMessage) => void) => any) {
+export function messageListener<T = any, R = any>(
+  type: BridgeMessage<T>['type'],
+  cb: (data: BridgeMessage<T>['data'], resolve: (data?: BridgeMessage<R>['data']) => void, reject: (error: string) => void) => any,
+  win: Window = window,
+) {
   function eventHandler(e: MessageEvent) {
     const data = e.data;
-    if (isBridgeMessage(data)) {
-      cb(data, (resMessage) => {
-        window.postMessage(resMessage, '*');
+    if (isBridgeMessage(data) && data.type === type) {
+      cb(data.data, (resData) => {
+        win.postMessage({
+          type: `${type}-reply`,
+          key: data.key,
+          data: resData,
+        } satisfies BridgeMessage, '*');
+      }, (error) => {
+        win.postMessage({
+          type: 'netpal-error',
+          key: data.key,
+          error,
+        } satisfies BridgeMessage, '*');
       });
     }
   };
@@ -62,4 +82,8 @@ export function messageListener(cb: (e: BridgeMessage, res: (e: BridgeMessage) =
   return () => {
     window.removeEventListener('message', eventHandler);
   };
+}
+
+export async function bridgeReady() {
+  await sendMessage('netpal-sandbox-ready');
 }
