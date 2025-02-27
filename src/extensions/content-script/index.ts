@@ -1,5 +1,11 @@
-import { isBridgeMessage, isBubble, isSink, messageListener, randomStr } from '@/utils';
-import type { BridgeMessage } from '@/utils';
+import {
+  buildMessage,
+  isBubble,
+  isSink,
+  messageListener,
+  parseMessage,
+  randomStr,
+} from '@/utils';
 
 const isTop = window === window.top;
 
@@ -24,7 +30,7 @@ const isTop = window === window.top;
       document.body.appendChild(main);
     }, 200);
   }
-  
+
 })();
 
 (() => {
@@ -35,7 +41,7 @@ const isTop = window === window.top;
   const sandboxReady = new Promise<void>((resolve) => {
     sandboxResolve = resolve;
   });
-  
+
   if (isTop) {
     /**
      * sandbox
@@ -56,49 +62,46 @@ const isTop = window === window.top;
       });
     });
   }
-  
+
   (() => {
     /**
      * Message transfer
      */
-    window.addEventListener('message', (e) => {
-      const data = e.data;
-      if (!isBridgeMessage(data)) {
-        return;
-      }
-      if (isTop && isSink(data)) {
-        sandbox?.contentWindow?.postMessage({
-          ...data,
-          direction: 'sink',
-        } satisfies BridgeMessage, '*');
-      }
-      if (isBubble(data)) {
-        chrome.runtime.sendMessage({
-          ...data,
-          direction: 'bubble',
-        } satisfies BridgeMessage);
-      }
-    });
     const runtimeKey = randomStr('runtime');
-    chrome.runtime.onMessage.addListener((e) => {
-      if (!isBridgeMessage(e)) {
-        return;
-      }
-      if (isBubble(e) && e.runtimeKey !== runtimeKey) {
-        chrome.runtime.sendMessage({
-          ...e,
-          direction: 'sink',
-          runtimeKey,
-        } satisfies BridgeMessage);
-      }
-      if (isSink(e)) {
-        window.postMessage({
-          ...e,
-          direction: 'sink',
-        } satisfies BridgeMessage, '*');
-      }
+    window.addEventListener('message', (e) => {
+      parseMessage(e.data, (data) => {
+        if (isTop && isSink(data)) {
+          sandbox?.contentWindow?.postMessage(buildMessage({
+            ...data,
+            direction: 'sink',
+          }), '*');
+        }
+        if (isBubble(data)) {
+          chrome.runtime.sendMessage(buildMessage({
+            ...data,
+            direction: 'sink',
+            runtimeKey,
+          }));
+        }
+      });
+    });
+    chrome.runtime.onMessage.addListener((message, _, sendResponse) => {
+
+      parseMessage(message, (data) => {
+        if (data.runtimeKey !== runtimeKey) {
+          window.postMessage(buildMessage({
+            ...data,
+            direction: 'sink',
+          }), '*');
+        }
+      });
+
+      sendResponse({
+        description: `content ${runtimeKey} copy`,
+      });
+
     });
   })();
-  
+
 
 })();

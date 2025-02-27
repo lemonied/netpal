@@ -1,4 +1,4 @@
-'use strict';
+import { buildMessage, parseMessage } from '@/utils';
 
 /**
  * @description 参考文档
@@ -10,6 +10,15 @@
 //   return tab;
 // }
 
-(async () => {
+chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 
-})();
+  const tabId = sender.tab?.id;
+
+  if (typeof tabId === 'number') {
+    parseMessage(message, (data) => {
+      chrome.tabs.sendMessage(tabId, buildMessage(data));
+    });
+  }
+
+  sendResponse('service-worker copy');
+});
