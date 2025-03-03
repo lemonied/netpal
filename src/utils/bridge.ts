@@ -40,7 +40,7 @@ export function isSink<T extends BridgeMessage>(data: T) {
   return !data.direction || data.direction === 'sink';
 }
 
-export function sendMessage<T=any, R=any>(type: BridgeMessage<T>['type'], data?: BridgeMessage<T>['data']) {
+export function sendMessage<T=any, R=any>(type: BridgeMessage<T>['type'], data?: BridgeMessage<T>['data'], win: Window = window) {
 
   let resolved: (value: R) => void;
   let rejected: (error: any) => void;
@@ -58,14 +58,14 @@ export function sendMessage<T=any, R=any>(type: BridgeMessage<T>['type'], data?:
         } else {
           resolved(data.data);
         }
-        window.removeEventListener('message', eventHandler);
+        win.removeEventListener('message', eventHandler);
       }
     });
   };
 
-  window.postMessage(buildMessage(birdgeMessage), '*');
+  win.postMessage(buildMessage(birdgeMessage), '*');
 
-  window.addEventListener('message', eventHandler);
+  win.addEventListener('message', eventHandler);
 
   return new Promise<R>((resolve, reject) => {
     resolved = resolve;
@@ -76,19 +76,19 @@ export function sendMessage<T=any, R=any>(type: BridgeMessage<T>['type'], data?:
 export function messageListener<T=any, R=any>(
   type: BridgeMessage<T>['type'],
   cb: (data: BridgeMessage<T>['data'], resolve: (data?: BridgeMessage<R>['data']) => void, reject: (error: string) => void) => any,
-  win: Window = window,
+  resWin: Window = window,
 ) {
   function eventHandler(e: MessageEvent) {
     parseMessage(e.data, (data) => {
       if (data.type === type) {
         cb(data.data, (resData) => {
-          win.postMessage(buildMessage({
+          resWin.postMessage(buildMessage({
             type: `${type}-reply`,
             key: data.key,
             data: resData,
           }), '*');
         }, (error) => {
-          win.postMessage(buildMessage({
+          resWin.postMessage(buildMessage({
             type: 'netpal-error',
             key: data.key,
             error,

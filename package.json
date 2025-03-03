@@ -19,11 +19,12 @@
     "@dnd-kit/core": "^6.3.1",
     "@emotion/react": "^11.14.0",
     "@emotion/styled": "^11.14.0",
-    "@monaco-editor/react": "^4.7.0-rc.0",
+    "@monaco-editor/react": "^4.7.0",
     "@mui/icons-material": "^6.4.4",
     "@mui/material": "^6.4.4",
     "form-pilot": "^0.0.4",
     "lodash": "^4.17.21",
+    "monaco-editor": "^0.52.2",
     "react": "^19.0.0",
     "react-dom": "^19.0.0"
   },

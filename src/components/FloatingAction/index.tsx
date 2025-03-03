@@ -10,10 +10,7 @@ import {
 import { CSS } from '@dnd-kit/utilities';
 import React from 'react';
 
-const Wrapper = styled(Fab)`
-  position: fixed;
-  z-index: 99999;
-`;
+const Wrapper = styled(Fab)``;
 
 interface SharedProps {
   onClick?: React.MouseEventHandler<HTMLButtonElement>;

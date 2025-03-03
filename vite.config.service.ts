@@ -9,7 +9,7 @@ export default defineConfig(() => {
     build: {
       rollupOptions: {
         input: {
-          'service-worker': 'src/extensions/service-worker/index.ts',
+          'service-worker': 'extensions/service-worker/index.ts',
         },
         output: [
           {

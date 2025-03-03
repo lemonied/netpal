@@ -22,15 +22,6 @@ const isTop = window === window.top;
     head.appendChild(injection);
   }
 
-  if (isTop) {
-    window.setTimeout(() => {
-      const main = document.createElement('script');
-      main.src = chrome.runtime.getURL('main.js');
-      main.type = 'module';
-      document.body.appendChild(main);
-    }, 200);
-  }
-
 })();
 
 (() => {
@@ -47,7 +38,7 @@ const isTop = window === window.top;
      * sandbox
      */
     sandbox = document.createElement('iframe');
-    sandbox.src = chrome.runtime.getURL('sandbox.html');
+    sandbox.src = chrome.runtime.getURL('extensions/sandbox/index.html');
     sandbox.style.display = 'none';
     window.addEventListener('load', () => {
       document.body.appendChild(sandbox!);
@@ -85,8 +76,8 @@ const isTop = window === window.top;
         }
       });
     });
-    chrome.runtime.onMessage.addListener((message, _, sendResponse) => {
 
+    chrome.runtime.onMessage.addListener((message, _, sendResponse) => {
       parseMessage(message, (data) => {
         if (data.runtimeKey !== runtimeKey) {
           window.postMessage(buildMessage({

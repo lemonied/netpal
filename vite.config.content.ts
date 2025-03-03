@@ -9,7 +9,7 @@ export default defineConfig(() => {
     build: {
       rollupOptions: {
         input: {
-          'content-script': 'src/extensions/content-script/index.ts',
+          'content-script': 'extensions/content-script/index.ts',
         },
         output: [
           {
