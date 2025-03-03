@@ -26,8 +26,7 @@
     "default_path": "index.html"
   },
   "action": {
-    "default_title": "NetPal",
-    "default_popup": "extensions/popup/index.html"
+    "default_title": "NetPal"
   },
   "web_accessible_resources": [
     {

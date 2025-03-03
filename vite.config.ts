@@ -9,7 +9,6 @@ export default defineConfig(() => {
       rollupOptions: {
         input: {
           index: 'index.html',
-          popup: 'extensions/popup/index.html',
           sandbox: 'extensions/sandbox/index.html',
           injection: 'src/injection/index.ts',
           'panel-trigger': 'extensions/panel-trigger/main.tsx',

@@ -10,6 +10,8 @@ import { buildMessage, parseMessage } from '@/utils';
 //   return tab;
 // }
 
+chrome.sidePanel.setPanelBehavior({ openPanelOnActionClick: true });
+
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 
   const tabId = sender.tab?.id;
