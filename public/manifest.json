@@ -42,13 +42,8 @@
     }
   ],
   "permissions": [
-    "declarativeNetRequest",
-    "declarativeNetRequestFeedback",
-    "scripting",
-    "cookies",
-    "storage",
     "sidePanel",
-    "contextMenus"
+    "tabs"
   ],
   "host_permissions": [
     "<all_urls>"
