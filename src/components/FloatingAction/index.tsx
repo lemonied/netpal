@@ -9,7 +9,7 @@ import {
 } from '@dnd-kit/core';
 import { CSS } from '@dnd-kit/utilities';
 import React from 'react';
-import { sendMessage } from '@/utils';
+import { emitMessage } from '@/utils';
 
 const Wrapper = styled(Fab)`
   position: fixed;
@@ -79,7 +79,7 @@ const FloatingAction = () => {
       <DraggableItem
         position={position}
         onClick={() => {
-          sendMessage('netpal-open-panel');
+          emitMessage('netpal-open-panel');
         }}
       />
     </DndContext>

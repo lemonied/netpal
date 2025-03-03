@@ -16,6 +16,9 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 
   if (typeof tabId === 'number') {
     parseMessage(message, (data) => {
+      if (data.type === 'netpal-open-panel') {
+        chrome.sidePanel.open({ tabId });
+      }
       chrome.tabs.sendMessage(tabId, buildMessage(data));
     });
   }

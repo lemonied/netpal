@@ -40,15 +40,22 @@ export function isSink<T extends BridgeMessage>(data: T) {
   return !data.direction || data.direction === 'sink';
 }
 
-export function sendMessage<T=any, R=any>(type: BridgeMessage<T>['type'], data?: BridgeMessage<T>['data'], win: Window = window) {
-
-  let resolved: (value: R) => void;
-  let rejected: (error: any) => void;
+export function emitMessage<T = any>(type: BridgeMessage<T>['type'], data?: T, win: Window = window) {
   const birdgeMessage = {
     type,
     key: randomStr(type),
     data,
-  } satisfies BridgeMessage;
+  } satisfies BridgeMessage<T>;
+  win.postMessage(buildMessage(birdgeMessage), '*');
+  return birdgeMessage;
+}
+
+export function sendMessage<T = any, R = any>(...args: Parameters<typeof emitMessage<T>>) {
+
+  let resolved: (value: R) => void;
+  let rejected: (error: any) => void;
+  const birdgeMessage = emitMessage(...args);
+  const type = args[0];
 
   function eventHandler(e: MessageEvent) {
     parseMessage(e.data, (data) => {
@@ -58,14 +65,12 @@ export function sendMessage<T=any, R=any>(type: BridgeMessage<T>['type'], data?:
         } else {
           resolved(data.data);
         }
-        win.removeEventListener('message', eventHandler);
+        window.removeEventListener('message', eventHandler);
       }
     });
   };
 
-  win.postMessage(buildMessage(birdgeMessage), '*');
-
-  win.addEventListener('message', eventHandler);
+  window.addEventListener('message', eventHandler);
 
   return new Promise<R>((resolve, reject) => {
     resolved = resolve;
@@ -73,9 +78,9 @@ export function sendMessage<T=any, R=any>(type: BridgeMessage<T>['type'], data?:
   });
 }
 
-export function messageListener<T=any, R=any>(
+export function messageListener<T = any, R = any>(
   type: BridgeMessage<T>['type'],
-  cb: (data: BridgeMessage<T>['data'], resolve: (data?: BridgeMessage<R>['data']) => void, reject: (error: string) => void) => any,
+  cb: (data: T, resolve: (data?: R) => void, reject: (error: string) => void) => any,
   resWin: Window = window,
 ) {
   function eventHandler(e: MessageEvent) {

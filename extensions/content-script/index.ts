@@ -53,23 +53,13 @@ const isTop = window === window.top;
       document.body.appendChild(sandbox!);
       sandboxResolve();
     });
-    messageListener('netpal-sandbox-ready', (_, resFn) => {
+    messageListener('netpal-sandbox-ready', (_, resolve, reject) => {
       /**
        * is sandbox ready
        */
-      sandboxReady.then(() => {
-        resFn();
-      });
+      sandboxReady.then(resolve).catch(reject);
     });
 
-    messageListener('netpal-open-panel', async (_, resolve) => {
-      const tab = await chrome.tabs.getCurrent();
-      const tabId = tab?.id;
-      if (typeof tabId === 'number') {
-        chrome.sidePanel.open({ tabId });
-      }
-      resolve();
-    });
   }
 
   (() => {
