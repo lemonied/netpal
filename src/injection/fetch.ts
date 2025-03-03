@@ -85,7 +85,7 @@ async function determineBodyType(instance: Request | Response) {
 
   return {
     type: 'unknown',
-    value: await instance.clone().arrayBuffer(),
+    value: instance.clone().body,
   };
 }
 
