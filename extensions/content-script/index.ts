@@ -27,7 +27,7 @@ const isTop = window === window.top;
       const panelTrigger = document.createElement('script');
       panelTrigger.src = chrome.runtime.getURL('panel-trigger.js');
       panelTrigger.type = 'module';
-      head.appendChild(injection);
+      head.appendChild(panelTrigger);
     });
   }
 
