@@ -25,6 +25,10 @@
   "side_panel": {
     "default_path": "index.html"
   },
+  "action": {
+    "default_title": "NetPal",
+    "default_popup": "extensions/popup/index.html"
+  },
   "web_accessible_resources": [
     {
       "resources": [
@@ -47,10 +51,6 @@
   "host_permissions": [
     "<all_urls>"
   ],
-  "action": {
-    "default_title": "NetPal",
-    "default_popup": "popup.html"
-  },
   "icons": {
     "16": "logo.png",
     "32": "logo.png",
