@@ -9,14 +9,15 @@ import {
 } from '@dnd-kit/core';
 import { CSS } from '@dnd-kit/utilities';
 import React from 'react';
+import { sendMessage } from '@/utils';
 
-const Wrapper = styled(Fab)``;
+const Wrapper = styled(Fab)`
+  position: fixed;
+  z-index: 99999;
+`;
 
-interface SharedProps {
+interface DraggableItemProps {
   onClick?: React.MouseEventHandler<HTMLButtonElement>;
-}
-
-interface DraggableItemProps extends SharedProps {
   position: {
     x: number;
     y: number;
@@ -49,9 +50,7 @@ const DraggableItem = (props: DraggableItemProps) => {
   );
 };
 
-const FloatingAction = (props: SharedProps) => {
-
-  const { onClick } = props;
+const FloatingAction = () => {
 
   const [position, setPosition] = React.useState({ x: 20, y: 20 });
 
@@ -77,7 +76,12 @@ const FloatingAction = (props: SharedProps) => {
         });
       }}
     >
-      <DraggableItem position={position} onClick={onClick} />
+      <DraggableItem
+        position={position}
+        onClick={() => {
+          sendMessage('netpal-open-panel');
+        }}
+      />
     </DndContext>
   );
 };

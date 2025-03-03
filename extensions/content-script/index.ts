@@ -22,6 +22,15 @@ const isTop = window === window.top;
     head.appendChild(injection);
   }
 
+  if (isTop) {
+    window.addEventListener('load', () => {
+      const panelTrigger = document.createElement('script');
+      panelTrigger.src = chrome.runtime.getURL('panel-trigger.js');
+      panelTrigger.type = 'module';
+      head.appendChild(injection);
+    });
+  }
+
 })();
 
 (() => {
@@ -51,6 +60,15 @@ const isTop = window === window.top;
       sandboxReady.then(() => {
         resFn();
       });
+    });
+
+    messageListener('netpal-open-panel', async (_, resolve) => {
+      const tab = await chrome.tabs.getCurrent();
+      const tabId = tab?.id;
+      if (typeof tabId === 'number') {
+        chrome.sidePanel.open({ tabId });
+      }
+      resolve();
     });
   }
 

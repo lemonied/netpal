@@ -12,6 +12,7 @@ export default defineConfig(() => {
           popup: 'extensions/popup/index.html',
           sandbox: 'extensions/sandbox/index.html',
           injection: 'src/injection/index.ts',
+          'panel-trigger': 'extensions/panel-trigger/main.tsx',
         },
         output: [
           {

@@ -19,7 +19,7 @@
   ],
   "sandbox": {
     "pages": [
-      "sandbox.html"
+      "extensions/sandbox/index.html"
     ]
   },
   "side_panel": {
@@ -33,7 +33,8 @@
     {
       "resources": [
         "*.js",
-        "*.html"
+        "*.html",
+        "*.css"
       ],
       "matches": [
         "*://*/*"
@@ -46,7 +47,8 @@
     "scripting",
     "cookies",
     "storage",
-    "sidePanel"
+    "sidePanel",
+    "contextMenus"
   ],
   "host_permissions": [
     "<all_urls>"
