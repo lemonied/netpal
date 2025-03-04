@@ -1,16 +1,37 @@
-import { buildMessage, parseMessage } from '@/utils';
+import { buildMessage, buildReplyMessage, parseMessage, randomStr } from '@/utils';
 
 /**
  * @description 参考文档
  * @see https://developer.chrome.com/docs/extensions/reference/api
  */
 
-// async function getCurrentTab() {
-//   const [tab] = await chrome.tabs.query({ active: true, lastFocusedWindow: true });
-//   return tab;
-// }
+async function getCurrentTab() {
+  const [tab] = await chrome.tabs.query({ active: true, lastFocusedWindow: true });
+  return tab;
+}
 
-chrome.sidePanel.setPanelBehavior({ openPanelOnActionClick: true });
+let sidePanelIsOpen = false;
+async function notifySidePanelStat() {
+  const tabId = (await getCurrentTab()).id;
+  if (typeof tabId === 'number') {
+    chrome.tabs.sendMessage(tabId, buildMessage({
+      type: 'netpal-panel-status',
+      key: randomStr('panel-status'),
+      data: sidePanelIsOpen,
+    }));
+  }
+}
+
+chrome.runtime.onConnect.addListener((port) => {
+  if (port.name === 'sidePanelStat') {
+    sidePanelIsOpen = true;
+    notifySidePanelStat();
+    port.onDisconnect.addListener(() => {
+      sidePanelIsOpen = false;
+      notifySidePanelStat();
+    });
+  }
+});
 
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 
@@ -21,9 +42,16 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
       if (data.type === 'netpal-open-panel') {
         chrome.sidePanel.open({ tabId });
       }
+      if (data.type === 'netpal-get-panel-status') {
+        chrome.tabs.sendMessage(tabId, buildMessage(
+          buildReplyMessage(data, sidePanelIsOpen),
+        ));
+      }
       chrome.tabs.sendMessage(tabId, buildMessage(data));
     });
   }
 
   sendResponse('service-worker copy');
 });
+
+chrome.sidePanel.setPanelBehavior({ openPanelOnActionClick: true });

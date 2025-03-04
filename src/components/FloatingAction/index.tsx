@@ -9,7 +9,8 @@ import {
 } from '@dnd-kit/core';
 import { CSS } from '@dnd-kit/utilities';
 import React from 'react';
-import { emitMessage } from '@/utils';
+import { emitMessage, messageListener, sendMessage } from '@/utils';
+import { useWindowFocus } from '@/hooks';
 
 const Wrapper = styled(Fab)`
   position: fixed;
@@ -53,6 +54,7 @@ const DraggableItem = (props: DraggableItemProps) => {
 const FloatingAction = () => {
 
   const [position, setPosition] = React.useState({ x: 20, y: 20 });
+  const [sidePanelOpen, setSidePanelOpen] = React.useState(false);
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -62,6 +64,22 @@ const FloatingAction = () => {
       },
     }),
   );
+
+  React.useEffect(() => {
+    return messageListener('netpal-panel-status', (data) => {
+      setSidePanelOpen(data.data);
+    });
+  }, []);
+
+  useWindowFocus(() => {
+    sendMessage('netpal-get-panel-status').then(data => {
+      setSidePanelOpen(data);
+    });
+  });
+
+  if (sidePanelOpen) {
+    return null;
+  }
 
   return (
     <DndContext

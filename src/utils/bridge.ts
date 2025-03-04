@@ -32,6 +32,14 @@ export function parseMessage<T=any>(message: unknown, cb: (message: BridgeMessag
   }
 }
 
+export function buildReplyMessage<T = any>(message: BridgeMessage, data?: T) {
+  return {
+    type: `${message.type}-reply`,
+    key: message.key,
+    data,
+  } satisfies BridgeMessage<T>;
+}
+
 export function isBubble<T extends BridgeMessage>(data: T) {
   return !data.direction || data.direction === 'bubble';
 }
@@ -87,11 +95,12 @@ export function messageListener<T = any, R = any>(
     parseMessage(e.data, (data) => {
       if (data.type === type) {
         cb(data.data, (resData) => {
-          resWin.postMessage(buildMessage({
-            type: `${type}-reply`,
-            key: data.key,
-            data: resData,
-          }), '*');
+          resWin.postMessage(
+            buildMessage(
+              buildReplyMessage(data, resData),
+            ),
+            '*',
+          );
         }, (error) => {
           resWin.postMessage(buildMessage({
             type: 'netpal-error',

@@ -10,3 +10,5 @@ createRoot(container).render(
     <App />
   </StrictMode>,
 );
+
+chrome.runtime?.connect({ name: 'sidePanelStat' });
