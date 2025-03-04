@@ -1,7 +1,12 @@
-import { debounce } from 'lodash';
+import { throttle } from 'lodash';
 
-export const onWindowFocus = (callback: () => any) => {
-  const debounceCallback = debounce(callback, 10);
+export interface OnWindowFocusOptions {
+  wait?: number;
+  immediate?: boolean;
+}
+export const onWindowFocus = (callback: () => any, options?: OnWindowFocusOptions) => {
+  const { wait = 2000, immediate } = options || {};
+  const debounceCallback = throttle(callback, wait, { trailing: false });
   const onVisibilityChange = () => {
     if (!document.hidden) {
       debounceCallback();
@@ -10,6 +15,9 @@ export const onWindowFocus = (callback: () => any) => {
   const onFocus = () => {
     debounceCallback();
   };
+  if (immediate) {
+    debounceCallback();
+  }
   window.addEventListener('visibilitychange', onVisibilityChange);
   window.addEventListener('focus', onFocus);
 

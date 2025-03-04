@@ -67,7 +67,7 @@ const FloatingAction = () => {
 
   React.useEffect(() => {
     return messageListener('netpal-panel-status', (data) => {
-      setSidePanelOpen(data.data);
+      setSidePanelOpen(data);
     });
   }, []);
 
@@ -75,7 +75,7 @@ const FloatingAction = () => {
     sendMessage('netpal-get-panel-status').then(data => {
       setSidePanelOpen(data);
     });
-  });
+  }, { immediate: true });
 
   if (sidePanelOpen) {
     return null;
