@@ -62,7 +62,7 @@ class XMLHttpRequest extends OriginalXMLHttpRequest {
 
     super.addEventListener('readystatechange', () => {
       const responseType = super.responseType || 'text';
-      if (this.readyState === OriginalXMLHttpRequest.DONE) {
+      if (super.readyState === OriginalXMLHttpRequest.DONE) {
         switch (responseType) {
           case 'text': {
             responsePending = requestPending.then(ctx => {
@@ -103,15 +103,14 @@ class XMLHttpRequest extends OriginalXMLHttpRequest {
 
   }
 
-  open(method: string, url: string | URL, async?: any, user?: any, password?: any) {
+  open(method: string, url: string | URL, ...restParams: any[]) {
     this.internalNetpal.requestUrl = url;
     this.internalNetpal.requestPending.then((ctx) => {
       super.open(
         method,
         ctx.getTransformedURL(),
-        async,
-        user,
-        password,
+        // @ts-ignore
+        ...restParams,
       );
     });
   }
