@@ -24,7 +24,7 @@ class FakeResponse extends Response {
     this._type = extraOption?.type;
   }
   clone() {
-    const cloned = new FakeResponse(this.body, this, {
+    const cloned = new FakeResponse(super.clone().body, this, {
       type: this.type,
       url: this.url,
     });
