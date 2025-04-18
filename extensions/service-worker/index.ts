@@ -15,7 +15,7 @@ async function notifySidePanelStat() {
   const tabId = (await getCurrentTab()).id;
   if (typeof tabId === 'number') {
     chrome.tabs.sendMessage(tabId, buildMessage({
-      type: 'netpal-panel-status',
+      type: 'panel-status',
       key: randomStr('panel-status'),
       data: sidePanelIsOpen,
     }));
@@ -39,13 +39,11 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 
   if (typeof tabId === 'number') {
     parseMessage(message, (data) => {
-      if (data.type === 'netpal-open-panel') {
+      if (data.type === 'open-panel') {
         chrome.sidePanel.open({ tabId });
       }
-      if (data.type === 'netpal-get-panel-status') {
-        chrome.tabs.sendMessage(tabId, buildMessage(
-          buildReplyMessage(data, sidePanelIsOpen),
-        ));
+      if (data.type === 'get-panel-status') {
+        chrome.tabs.sendMessage(tabId, buildReplyMessage(data, sidePanelIsOpen));
       }
       chrome.tabs.sendMessage(tabId, buildMessage(data));
     });

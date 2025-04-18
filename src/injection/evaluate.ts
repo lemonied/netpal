@@ -29,7 +29,7 @@ function toSimple(ctx: RequestContext | ResponseContext) {
 }
 
 async function evaluateScript(code: string, ctx: RequestContext | ResponseContext) {
-  return await sendMessage('netpal-script-evaluate', `(${code})(${JSON.stringify(toSimple(ctx))})`);
+  return await sendMessage('script-evaluate', `(${code})(${JSON.stringify(toSimple(ctx))})`);
 }
 
 window.netpalInterceptors.request.push(async (_, next) => {
@@ -53,11 +53,12 @@ function reload(interceptors: TransformedSimpleMiddleware[]) {
   uninstall.forEach(fn => fn());
   uninstall = [];
   interceptors.forEach(item => {
-    const req: Middleware<RequestContext> = async (ctx) => {
+    const req: Middleware<RequestContext> = async (ctx, next) => {
       const obj = await evaluateScript(item.request.fn, ctx) as SimpleRequestContext;
       ctx.url = obj.url;
       ctx.body = typeof ctx.body === 'string' ? obj.body : ctx.body;
       ctx.headers = new Headers(obj.headers);
+      await next();
     };
     window.netpalInterceptors.request.push(req);
     uninstall.push(() => {
@@ -66,9 +67,22 @@ function reload(interceptors: TransformedSimpleMiddleware[]) {
         window.netpalInterceptors.request.splice(index, 1);
       }
     });
+
+    const res: Middleware<ResponseContext> = async (ctx, next) => {
+      const obj = await evaluateScript(item.response.fn, ctx) as SimpleResponseContext;
+      ctx.body = typeof ctx.body === 'string' ? obj.body : ctx.body;
+      await next();
+    };
+    window.netpalInterceptors.response.push(res);
+    uninstall.push(() => {
+      const index = window.netpalInterceptors.response.indexOf(res);
+      if (index > -1) {
+        window.netpalInterceptors.response.splice(index, 1);
+      }
+    });
   });
 }
 
-messageListener('netpal-interceptors-reload', (data) => {
+messageListener('interceptors-reload', (data) => {
   reload(data);
 });

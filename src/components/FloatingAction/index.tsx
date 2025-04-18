@@ -10,7 +10,7 @@ import {
 import React from 'react';
 import { emitMessage, messageListener, sendMessage } from '@/utils';
 import { useWindowFocus } from '@/hooks';
-import {  positionFormat } from './util';
+import { positionFormat } from './util';
 
 const Wrapper = styled(Fab)`
   position: fixed;
@@ -98,13 +98,13 @@ const FloatingAction = () => {
   }, []);
 
   React.useEffect(() => {
-    return messageListener('netpal-panel-status', (data) => {
+    return messageListener('panel-status', (data) => {
       setSidePanelOpen(data);
     });
   }, []);
 
   useWindowFocus(() => {
-    sendMessage('netpal-get-panel-status').then(data => {
+    sendMessage('get-panel-status').then(data => {
       setSidePanelOpen(data);
     });
   }, { immediate: true });
@@ -129,7 +129,7 @@ const FloatingAction = () => {
         ref={buttonRef}
         position={position}
         onClick={() => {
-          emitMessage('netpal-open-panel');
+          emitMessage('open-panel');
         }}
       />
     </DndContext>

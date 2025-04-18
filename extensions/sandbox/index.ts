@@ -1,6 +1,6 @@
 import { messageListener } from '@/utils';
 
-messageListener('netpal-script-evaluate', async (data, resolve, reject) => {
+messageListener('script-evaluate', async (data, resolve, reject) => {
   try {
     const result = window.eval(data);
     if (result instanceof Promise) {

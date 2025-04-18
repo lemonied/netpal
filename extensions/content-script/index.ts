@@ -53,7 +53,7 @@ const isTop = window === window.top;
       document.body.appendChild(sandbox!);
       sandboxResolve();
     });
-    messageListener('netpal-sandbox-ready', (_, resolve, reject) => {
+    messageListener('sandbox-ready', (_, resolve, reject) => {
       /**
        * is sandbox ready
        */
