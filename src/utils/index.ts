@@ -4,3 +4,4 @@ export * from './common';
 export * from './compose';
 export * from './random';
 export * from './scene';
+export * from './storage';

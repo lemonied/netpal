@@ -1,11 +1,39 @@
+import React from 'react';
 import Form from 'form-pilot';
 import Item from './Item';
 import { Button } from '@mui/material';
 import { Add } from '@mui/icons-material';
+import { interceptorFnStr } from './util';
+import { debounce } from 'lodash';
+import { getInterceptors, saveInterceptor } from '@/utils';
+
+const debounceSave = debounce((value: any) => {
+  saveInterceptor(value);
+});
 
 const Interceptors = () => {
 
   const control = Form.useControl();
+
+  Form.useOnValueChange(({ newValue }) => {
+    const list: any[] = newValue?.list || [];
+    const body = list.map(item => [item.request, item.response]);
+    console.log(body);
+    debounceSave(body);
+  }, control);
+
+  React.useEffect(() => {
+    getInterceptors<string[][]>().then(value => {
+      control.setValue({
+        list: value.map(v => {
+          return {
+            request: v[0],
+            response: v[1],
+          };
+        }),
+      });
+    });
+  }, [control]);
 
   return (
     <>
@@ -38,7 +66,12 @@ const Interceptors = () => {
                     startIcon={
                       <Add />
                     }
-                    onClick={() => control.add()}
+                    onClick={() => {
+                      control.add({
+                        request: interceptorFnStr,
+                        response: interceptorFnStr,
+                      });
+                    }}
                   >添加拦截器</Button>
                 </>
               );

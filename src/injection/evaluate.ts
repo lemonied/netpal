@@ -39,22 +39,13 @@ window.netpalInterceptors.request.push(async (_, next) => {
 
 let uninstall: (() => void)[] = [];
 
-interface TransformedSimpleMiddleware {
-  request: {
-    key: string;
-    fn: string;
-  };
-  response: {
-    key: string;
-    fn: string;
-  };
-}
+type TransformedSimpleMiddleware = [string, string];
 function reload(interceptors: TransformedSimpleMiddleware[]) {
   uninstall.forEach(fn => fn());
   uninstall = [];
   interceptors.forEach(item => {
     const req: Middleware<RequestContext> = async (ctx, next) => {
-      const obj = await evaluateScript(item.request.fn, ctx) as SimpleRequestContext;
+      const obj = await evaluateScript(item[0], ctx) as SimpleRequestContext;
       ctx.url = obj.url;
       ctx.body = typeof ctx.body === 'string' ? obj.body : ctx.body;
       ctx.headers = new Headers(obj.headers);
@@ -69,7 +60,7 @@ function reload(interceptors: TransformedSimpleMiddleware[]) {
     });
 
     const res: Middleware<ResponseContext> = async (ctx, next) => {
-      const obj = await evaluateScript(item.response.fn, ctx) as SimpleResponseContext;
+      const obj = await evaluateScript(item[1], ctx) as SimpleResponseContext;
       ctx.body = typeof ctx.body === 'string' ? obj.body : ctx.body;
       await next();
     };

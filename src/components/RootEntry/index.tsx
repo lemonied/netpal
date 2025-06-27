@@ -1,5 +1,5 @@
 import Interceptors from '../Interceptors';
-import { Box, Tab, Tabs, Grid2 as Grid } from '@mui/material';
+import { Box, Tab, Tabs, Grid } from '@mui/material';
 import Form from 'form-pilot';
 
 const RootEntry = () => {

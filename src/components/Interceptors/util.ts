@@ -19,13 +19,8 @@ export interface SimpleResponseInterceptor {
   (ctx: SimpleResponseContext): Promise<SimpleResponseContext>;
 }
 
-export interface SimpleMiddleware {
-  request: {
-    key: string;
-    fn: SimpleRequestInterceptor;
-  };
-  response: {
-    key: string;
-    fn: SimpleResponseInterceptor;
-  };
-}
+export const interceptorFnStr = `
+(ctx) => {
+  return ctx;
+};
+`.trim();

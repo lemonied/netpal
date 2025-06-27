@@ -1,10 +1,11 @@
 import { defineConfig, mergeConfig } from 'vite';
+import type { UserConfig } from 'vite';
 import sharedConfig from './vite.config.shared';
 
 // https://vite.dev/config/
 export default defineConfig(() => {
 
-  return mergeConfig(sharedConfig, {
+  return mergeConfig<UserConfig, UserConfig>(sharedConfig, {
     publicDir: false,
     build: {
       rollupOptions: {
