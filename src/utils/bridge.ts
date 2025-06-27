@@ -31,11 +31,12 @@ export function parseMessage<T = any>(message: unknown, cb: (message: BridgeMess
   }
 }
 
-export function buildReplyMessage<T = any>(message: BridgeMessage, data?: T) {
+export function buildReplyMessage<T = any>(message: BridgeMessage, data?: T, error?: string) {
   return buildMessage({
     type: `${message.type}-reply`,
     key: message.key,
     data,
+    error,
   });
 }
 
@@ -67,7 +68,7 @@ export function sendMessage<T = any, R = any>(...args: Parameters<typeof emitMes
   function eventHandler(e: MessageEvent) {
     parseMessage(e.data, (data) => {
       if (data.type === `${type}-reply` && data.key === birdgeMessage.key) {
-        if (data.type === 'error') {
+        if (typeof data.error === 'string') {
           rejected(new Error(data.error));
         } else {
           resolved(data.data);
@@ -99,11 +100,10 @@ export function messageListener<T = any, R = any>(
             '*',
           );
         }, (error) => {
-          resWin.postMessage(buildMessage({
-            type: 'error',
-            key: data.key,
-            error,
-          }), '*');
+          resWin.postMessage(
+            buildReplyMessage(data, null, error),
+            '*',
+          );
         });
       }
     });

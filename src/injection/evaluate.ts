@@ -35,7 +35,7 @@ function toSimple(ctx: RequestContext | ResponseContext) {
 }
 
 async function evaluateScript(code: string, ctx: RequestContext | ResponseContext) {
-  return await sendMessage('script-evaluate', `(${code})(${JSON.stringify(toSimple(ctx))})`);
+  return await sendMessage('script-evaluate', `(async (ctx) => {const fn = ${code}\nreturn fn(ctx)})(${JSON.stringify(toSimple(ctx))})`);
 }
 
 let uninstall: (() => void)[] = [];
@@ -75,10 +75,18 @@ function reload(interceptors: TransformedSimpleMiddleware[]) {
   });
 }
 
+let resolved: () => void;
+const init = new Promise<void>(resolve => resolved = resolve);
+
 window.netpalInterceptors.request.push(async (_, next) => {
   await bridgeReady();
-  await sendMessage('get-interceptors').then(data => reload(data));
+  await init;
   await next();
+});
+
+sendMessage('get-interceptors').then(data => {
+  reload(data);
+  resolved();
 });
 
 messageListener('interceptors-reload', (data) => {

@@ -22,7 +22,7 @@ const Interceptors = () => {
   }, control);
 
   React.useEffect(() => {
-    getInterceptors<string[][]>().then(value => {
+    getInterceptors().then(value => {
       control.setValue({
         list: value.map(v => {
           return {
