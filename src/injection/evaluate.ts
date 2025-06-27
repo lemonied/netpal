@@ -10,19 +10,25 @@ function transformHeaders(headers: Headers) {
   return Array.from(headers.entries());
 }
 
+function toSimpleRequest(ctx: RequestContext) {
+  return {
+    url: ctx.url,
+    headers: transformHeaders(ctx.headers),
+    body: typeof ctx.body === 'string' ? ctx.body : undefined,
+  } satisfies SimpleRequestContext;
+}
+
 function toSimple(ctx: RequestContext | ResponseContext) {
+
   if (ctx instanceof RequestContext) {
-    return {
-      url: ctx.url,
-      headers: transformHeaders(ctx.headers),
-      body: typeof ctx.body === 'string' ? ctx.body : undefined,
-    } satisfies SimpleRequestContext;
+    return toSimpleRequest(ctx);
   }
   if (ctx instanceof ResponseContext) {
     return {
       headers: transformHeaders(ctx.headers),
       status: ctx.status,
       body: typeof ctx.body === 'string' ? ctx.body : undefined,
+      request: toSimpleRequest(ctx.request),
     } satisfies SimpleResponseContext;
   }
   return null;
@@ -31,11 +37,6 @@ function toSimple(ctx: RequestContext | ResponseContext) {
 async function evaluateScript(code: string, ctx: RequestContext | ResponseContext) {
   return await sendMessage('script-evaluate', `(${code})(${JSON.stringify(toSimple(ctx))})`);
 }
-
-window.netpalInterceptors.request.push(async (_, next) => {
-  await bridgeReady();
-  await next();
-});
 
 let uninstall: (() => void)[] = [];
 
@@ -73,6 +74,12 @@ function reload(interceptors: TransformedSimpleMiddleware[]) {
     });
   });
 }
+
+window.netpalInterceptors.request.push(async (_, next) => {
+  await bridgeReady();
+  await sendMessage('get-interceptors').then(data => reload(data));
+  await next();
+});
 
 messageListener('interceptors-reload', (data) => {
   reload(data);

@@ -45,6 +45,11 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
       if (data.type === 'get-panel-status') {
         chrome.tabs.sendMessage(tabId, buildReplyMessage(data, sidePanelIsOpen));
       }
+      if (data.type === 'get-interceptors') {
+        (async () => {
+          chrome.tabs.sendMessage(tabId, buildReplyMessage(data, await getInterceptors()));
+        })();
+      }
       chrome.tabs.sendMessage(tabId, buildMessage(data));
     });
   }

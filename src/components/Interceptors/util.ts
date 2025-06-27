@@ -13,6 +13,7 @@ export interface SimpleRequestInterceptor {
 
 export interface SimpleResponseContext extends SharedSimpleContext {
   status: number;
+  request: SimpleRequestContext;
 }
 
 export interface SimpleResponseInterceptor {
