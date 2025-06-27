@@ -1,4 +1,4 @@
-import { buildMessage, buildReplyMessage, parseMessage, randomStr } from '@/utils';
+import { buildMessage, buildReplyMessage, getInterceptors, parseMessage, randomStr } from '@/utils';
 
 /**
  * @description 参考文档
@@ -53,3 +53,11 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 });
 
 chrome.sidePanel.setPanelBehavior({ openPanelOnActionClick: true });
+
+chrome.tabs.onActivated.addListener(async (info) => {
+  chrome.tabs.sendMessage(info.tabId, buildMessage({
+    type: 'interceptors-reload',
+    key: randomStr('interceptors-reload'),
+    data: await getInterceptors(),
+  }));
+});

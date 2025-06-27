@@ -18,7 +18,6 @@ const Interceptors = () => {
   Form.useOnValueChange(({ newValue }) => {
     const list: any[] = newValue?.list || [];
     const body = list.map(item => [item.request, item.response]);
-    console.log(body);
     debounceSave(body);
   }, control);
 
