@@ -1,4 +1,4 @@
-import { sendMessage, messageListener, bridgeReady } from '@/utils';
+import { sendMessage, messageListener } from '@/utils';
 import type { Middleware } from '@/utils';
 import { RequestContext, ResponseContext } from './interceptor';
 import type {
@@ -12,7 +12,7 @@ function transformHeaders(headers: Headers) {
 
 function toSimpleRequest(ctx: RequestContext) {
   return {
-    url: ctx.url,
+    url: new URL(ctx.url, window.location.href).href,
     headers: transformHeaders(ctx.headers),
     body: typeof ctx.body === 'string' ? ctx.body : undefined,
   } satisfies SimpleRequestContext;
@@ -35,7 +35,7 @@ function toSimple(ctx: RequestContext | ResponseContext) {
 }
 
 async function evaluateScript(code: string, ctx: RequestContext | ResponseContext) {
-  return await sendMessage('script-evaluate', `(async (ctx) => {const fn = ${code}\nreturn fn(ctx)})(${JSON.stringify(toSimple(ctx))})`);
+  return await sendMessage('evaluate-script', `(async (ctx) => {const fn = ${code}\nreturn fn(ctx)})(${JSON.stringify(toSimple(ctx))})`);
 }
 
 let uninstall: (() => void)[] = [];
@@ -79,7 +79,6 @@ let resolved: () => void;
 const init = new Promise<void>(resolve => resolved = resolve);
 
 window.netpalInterceptors.request.push(async (_, next) => {
-  await bridgeReady();
   await init;
   await next();
 });

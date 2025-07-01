@@ -1,6 +1,6 @@
 import { messageListener } from '@/utils';
 
-messageListener('script-evaluate', async (data, resolve, reject) => {
+messageListener('evaluate-script', async (data, resolve, reject) => {
   try {
     const result = window.eval(data);
     if (result instanceof Promise) {

@@ -13,7 +13,7 @@ export class RequestContext {
     const { type, url, headers, body } = options;
     this.type = type;
     this.originalUrl = url;
-    this.url = url instanceof window.URL ? url.href : `${this.originalUrl}`;
+    this.url = url instanceof window.URL ? url.href : `${url}`;
     this.headers = headers;
     this.body = body;
   }

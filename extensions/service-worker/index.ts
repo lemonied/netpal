@@ -1,4 +1,4 @@
-import { buildMessage, buildReplyMessage, getInterceptors, parseMessage, randomStr } from '@/utils';
+import { buildMessage, getInterceptors, isBridgeMessage, isMatchType, messageReplySuffix, randomStr } from '@/utils';
 
 /**
  * @description 参考文档
@@ -37,24 +37,37 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 
   const tabId = sender.tab?.id;
 
-  if (typeof tabId === 'number') {
-    parseMessage(message, (data) => {
-      if (data.type === 'open-panel') {
+  if (isBridgeMessage(message)) {
+    switch (true) {
+      case isMatchType(message, 'open-panel') && typeof tabId === 'number': {
         chrome.sidePanel.open({ tabId });
+        break;
       }
-      if (data.type === 'get-panel-status') {
-        chrome.tabs.sendMessage(tabId, buildReplyMessage(data, sidePanelIsOpen));
+      case isMatchType(message, 'get-panel-status'): {
+        sendResponse({
+          ...message,
+          data: sidePanelIsOpen,
+          type: `${message.type}${messageReplySuffix}`,
+        });
+        return true;
       }
-      if (data.type === 'get-interceptors') {
+      case isMatchType(message, 'get-interceptors'): {
         (async () => {
-          chrome.tabs.sendMessage(tabId, buildReplyMessage(data, await getInterceptors()));
+          const interceptors = await getInterceptors();
+          sendResponse({
+            ...message,
+            data: interceptors,
+            type: `${message.type}${messageReplySuffix}`,
+          });
         })();
+        return true;
       }
-      chrome.tabs.sendMessage(tabId, buildMessage(data));
-    });
+      default: {
+        //
+      }
+    }
   }
 
-  sendResponse('service-worker copy');
 });
 
 chrome.sidePanel.setPanelBehavior({ openPanelOnActionClick: true });
