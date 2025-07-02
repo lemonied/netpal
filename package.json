@@ -11,8 +11,8 @@
     "build:web": "vite build -c vite.config.ts",
     "build:content": "vite build -c vite.config.content.ts",
     "build:service": "vite build -c vite.config.service.ts",
-    "build": "tsc -b && npm run build:web -- --emptyOutDir true && npm run build:content && npm run build:service",
-    "lint": "eslint .",
+    "build": "npm run lint && npm run build:web -- --emptyOutDir true && npm run build:content && npm run build:service",
+    "lint": "eslint . && tsc -b",
     "preview": "vite preview"
   },
   "dependencies": {

@@ -1,6 +1,6 @@
 import {
   isBridgeMessage,
-  netpalEventName,
+  NETPAL_EVENT_NAME,
 } from '@/utils';
 
 const isTop = window === window.top;
@@ -34,11 +34,11 @@ const isTop = window === window.top;
   /**
    * message transfer
    */
-  window.addEventListener(netpalEventName, ((e) => {
+  window.addEventListener(NETPAL_EVENT_NAME, ((e) => {
     const data = (e as CustomEvent).detail;
     if (isBridgeMessage(data)) {
       chrome.runtime.sendMessage(data).then(res => {
-        window.dispatchEvent(new CustomEvent(netpalEventName, {
+        window.dispatchEvent(new CustomEvent(NETPAL_EVENT_NAME, {
           detail: res,
         }));
       });
@@ -46,7 +46,7 @@ const isTop = window === window.top;
   }));
   chrome.runtime.onMessage.addListener((message) => {
     if (isBridgeMessage(message)) {
-      window.dispatchEvent(new CustomEvent(netpalEventName, {
+      window.dispatchEvent(new CustomEvent(NETPAL_EVENT_NAME, {
         detail: message,
       }));
     }

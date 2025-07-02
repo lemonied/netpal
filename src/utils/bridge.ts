@@ -1,10 +1,10 @@
 import { randomStr } from './random';
 
-const messageTypePrefix = 'netpal-';
+export const MESSAGE_TYPE_PREFIX = 'netpal-';
 
-export const messageReplySuffix = '-reply';
+export const MESSAGE_REPLY_SUFFIX = '-reply';
 
-export const netpalEventName = 'NetpalEvent';
+export const NETPAL_EVENT_NAME = 'NetpalEvent';
 
 interface BridgeMessage<T = any> {
   type: string;
@@ -16,34 +16,20 @@ interface BridgeMessage<T = any> {
 export function buildMessage<T = any>(message: BridgeMessage<T>) {
   return {
     ...message,
-    type: `${messageTypePrefix}${message.type}`,
+    type: `${MESSAGE_TYPE_PREFIX}${message.type}`,
   } satisfies BridgeMessage<T>;
 }
 
 export function isBridgeMessage(val: unknown): val is BridgeMessage {
-  return val && typeof (val as any).type === 'string' && (val as any).type.startsWith(messageTypePrefix);
+  return val && typeof (val as any).type === 'string' && (val as any).type.startsWith(MESSAGE_TYPE_PREFIX);
 }
 
 export function isMatchType<T extends BridgeMessage>(message: T, type: string) {
-  return message.type === `${messageTypePrefix}${type}`;
+  return message.type === `${MESSAGE_TYPE_PREFIX}${type}`;
 }
 
-function parseMessage<T = any>(message: unknown, cb: (message: BridgeMessage<T>) => void) {
-  if (isBridgeMessage(message)) {
-    cb({
-      ...message,
-      type: message.type.replace(messageTypePrefix, ''),
-    });
-  }
-}
-
-function buildReplyMessage<T = any>(message: BridgeMessage, data?: T, error?: string) {
-  return buildMessage({
-    type: `${message.type}${messageReplySuffix}`,
-    key: message.key,
-    data,
-    error,
-  });
+function isMatchReply<T extends BridgeMessage>(message: T, type: string) {
+  return message.type === `${MESSAGE_TYPE_PREFIX}${type}${MESSAGE_REPLY_SUFFIX}`;
 }
 
 export function emitMessage<T = any>(type: BridgeMessage<T>['type'], data?: T) {
@@ -52,7 +38,7 @@ export function emitMessage<T = any>(type: BridgeMessage<T>['type'], data?: T) {
     key: randomStr(type),
     data,
   } satisfies BridgeMessage<T>;
-  window.dispatchEvent(new CustomEvent(netpalEventName, {
+  window.dispatchEvent(new CustomEvent(NETPAL_EVENT_NAME, {
     detail: buildMessage(birdgeMessage),
   }));
   return birdgeMessage;
@@ -66,19 +52,18 @@ export function sendMessage<T = any, R = any>(...args: Parameters<typeof emitMes
   const type = args[0];
 
   function eventHandler(e: CustomEvent) {
-    parseMessage(e.detail, (data) => {
-      if (data.type === `${type}${messageReplySuffix}` && data.key === birdgeMessage.key) {
-        if (typeof data.error === 'string') {
-          rejected(new Error(data.error));
-        } else {
-          resolved(data.data);
-        }
-        window.removeEventListener(netpalEventName, eventHandler as any);
+    const data = e.detail;
+    if (isBridgeMessage(data) && isMatchReply(data, type) && data.key === birdgeMessage.key) {
+      if (typeof data.error === 'string') {
+        rejected(new Error(data.error));
+      } else {
+        resolved(data.data);
       }
-    });
+      window.removeEventListener(NETPAL_EVENT_NAME, eventHandler as any);
+    }
   };
 
-  window.addEventListener(netpalEventName, eventHandler as any);
+  window.addEventListener(NETPAL_EVENT_NAME, eventHandler as any);
 
   return new Promise<R>((resolve, reject) => {
     resolved = resolve;
@@ -86,27 +71,15 @@ export function sendMessage<T = any, R = any>(...args: Parameters<typeof emitMes
   });
 }
 
-export function messageListener<T = any, R = any>(
-  type: BridgeMessage<T>['type'],
-  cb: (data: T, resolve: (data?: R) => void, reject: (error: string) => void) => any,
-) {
+export function messageListener<T = any>( type: BridgeMessage<T>['type'], cb: (data: T) => any) {
   function eventHandler(e: CustomEvent) {
-    parseMessage(e.detail, (data) => {
-      if (data.type === type) {
-        cb(data.data, (resData) => {
-          window.dispatchEvent(new CustomEvent(netpalEventName, {
-            detail: buildReplyMessage(data, resData),
-          }));
-        }, (error) => {
-          window.dispatchEvent(new CustomEvent(netpalEventName, {
-            detail: buildReplyMessage(data, null, error),
-          }));
-        });
-      }
-    });
+    const data = e.detail;
+    if (isBridgeMessage(data) && isMatchType(data, type)) {
+      cb(data.data);
+    }
   };
-  window.addEventListener(netpalEventName, eventHandler as any);
+  window.addEventListener(NETPAL_EVENT_NAME, eventHandler as any);
   return () => {
-    window.removeEventListener(netpalEventName, eventHandler as any);
+    window.removeEventListener(NETPAL_EVENT_NAME, eventHandler as any);
   };
 }

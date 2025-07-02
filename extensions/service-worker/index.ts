@@ -1,4 +1,4 @@
-import { buildMessage, getInterceptors, isBridgeMessage, isMatchType, messageReplySuffix, randomStr } from '@/utils';
+import { buildMessage, getInterceptors, isBridgeMessage, isMatchType, MESSAGE_REPLY_SUFFIX, randomStr } from '@/utils';
 
 /**
  * @description 参考文档
@@ -47,7 +47,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         sendResponse({
           ...message,
           data: !!panelPort,
-          type: `${message.type}${messageReplySuffix}`,
+          type: `${message.type}${MESSAGE_REPLY_SUFFIX}`,
         });
         return true;
       }
@@ -57,7 +57,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
           sendResponse({
             ...message,
             data: interceptors,
-            type: `${message.type}${messageReplySuffix}`,
+            type: `${message.type}${MESSAGE_REPLY_SUFFIX}`,
           });
         })();
         return true;
@@ -75,7 +75,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         } else {
           sendResponse({
             ...message,
-            type: `${message.type}${messageReplySuffix}`,
+            type: `${message.type}${MESSAGE_REPLY_SUFFIX}`,
             data: undefined,
           });
         }
