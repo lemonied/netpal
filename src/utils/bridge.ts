@@ -4,6 +4,8 @@ const messageTypePrefix = 'netpal-';
 
 export const messageReplySuffix = '-reply';
 
+export const netpalEventName = 'NetpalEvent';
+
 interface BridgeMessage<T = any> {
   type: string;
   key: string;
@@ -50,7 +52,9 @@ export function emitMessage<T = any>(type: BridgeMessage<T>['type'], data?: T) {
     key: randomStr(type),
     data,
   } satisfies BridgeMessage<T>;
-  window.postMessage(buildMessage(birdgeMessage), '*');
+  window.dispatchEvent(new CustomEvent(netpalEventName, {
+    detail: buildMessage(birdgeMessage),
+  }));
   return birdgeMessage;
 }
 
@@ -61,20 +65,20 @@ export function sendMessage<T = any, R = any>(...args: Parameters<typeof emitMes
   const birdgeMessage = emitMessage(...args);
   const type = args[0];
 
-  function eventHandler(e: MessageEvent) {
-    parseMessage(e.data, (data) => {
+  function eventHandler(e: CustomEvent) {
+    parseMessage(e.detail, (data) => {
       if (data.type === `${type}${messageReplySuffix}` && data.key === birdgeMessage.key) {
         if (typeof data.error === 'string') {
           rejected(new Error(data.error));
         } else {
           resolved(data.data);
         }
-        window.removeEventListener('message', eventHandler);
+        window.removeEventListener(netpalEventName, eventHandler as any);
       }
     });
   };
 
-  window.addEventListener('message', eventHandler);
+  window.addEventListener(netpalEventName, eventHandler as any);
 
   return new Promise<R>((resolve, reject) => {
     resolved = resolve;
@@ -85,27 +89,24 @@ export function sendMessage<T = any, R = any>(...args: Parameters<typeof emitMes
 export function messageListener<T = any, R = any>(
   type: BridgeMessage<T>['type'],
   cb: (data: T, resolve: (data?: R) => void, reject: (error: string) => void) => any,
-  resWin: Window = window,
 ) {
-  function eventHandler(e: MessageEvent) {
-    parseMessage(e.data, (data) => {
+  function eventHandler(e: CustomEvent) {
+    parseMessage(e.detail, (data) => {
       if (data.type === type) {
         cb(data.data, (resData) => {
-          resWin.postMessage(
-            buildReplyMessage(data, resData),
-            '*',
-          );
+          window.dispatchEvent(new CustomEvent(netpalEventName, {
+            detail: buildReplyMessage(data, resData),
+          }));
         }, (error) => {
-          resWin.postMessage(
-            buildReplyMessage(data, null, error),
-            '*',
-          );
+          window.dispatchEvent(new CustomEvent(netpalEventName, {
+            detail: buildReplyMessage(data, null, error),
+          }));
         });
       }
     });
   };
-  window.addEventListener('message', eventHandler);
+  window.addEventListener(netpalEventName, eventHandler as any);
   return () => {
-    window.removeEventListener('message', eventHandler);
+    window.removeEventListener(netpalEventName, eventHandler as any);
   };
 }

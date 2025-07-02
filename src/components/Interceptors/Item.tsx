@@ -31,6 +31,9 @@ const Item = () => {
                   height={200}
                   options={{
                     tabSize: 2,
+                    minimap: {
+                      enabled: false,
+                    },
                   }}
                 />
               </Form.Item>
@@ -59,6 +62,9 @@ const Item = () => {
                   height={200}
                   options={{
                     tabSize: 2,
+                    minimap: {
+                      enabled: false,
+                    },
                   }}
                 />
               </Form.Item>

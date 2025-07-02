@@ -1,6 +1,6 @@
 import {
   isBridgeMessage,
-  isMatchType,
+  netpalEventName,
 } from '@/utils';
 
 const isTop = window === window.top;
@@ -30,49 +30,25 @@ const isTop = window === window.top;
 })();
 
 (() => {
-  /**
-   * sandbox
-   */
-
-  const sandbox = document.createElement('iframe');
-  sandbox.src = chrome.runtime.getURL('extensions/sandbox/index.html');
-  sandbox.style.display = 'none';
-  const sandboxReady = new Promise<void>((resolve) => {
-    sandbox.onload = () => resolve();
-  });
-
-  if (!document.body) {
-    window.addEventListener('load', () => {
-      document.body.appendChild(sandbox);
-    });
-  } else {
-    document.body.appendChild(sandbox);
-  }
 
   /**
    * message transfer
    */
-  window.addEventListener('message', (e) => {
-    const data = e.data;
+  window.addEventListener(netpalEventName, ((e) => {
+    const data = (e as CustomEvent).detail;
     if (isBridgeMessage(data)) {
-      switch (true) {
-        case isMatchType(data, 'evaluate-script'): {
-          sandboxReady.then(() => {
-            sandbox.contentWindow?.postMessage(data, '*');
-          });
-          break;
-        }
-        default: {
-          chrome.runtime.sendMessage(data).then(res => {
-            window.postMessage(res, '*');
-          });
-        }
-      }
+      chrome.runtime.sendMessage(data).then(res => {
+        window.dispatchEvent(new CustomEvent(netpalEventName, {
+          detail: res,
+        }));
+      });
     }
-  });
+  }));
   chrome.runtime.onMessage.addListener((message) => {
     if (isBridgeMessage(message)) {
-      window.postMessage(message, '*');
+      window.dispatchEvent(new CustomEvent(netpalEventName, {
+        detail: message,
+      }));
     }
   });
 })();

@@ -46,10 +46,18 @@ function reload(interceptors: TransformedSimpleMiddleware[]) {
   uninstall = [];
   interceptors.forEach(item => {
     const req: Middleware<RequestContext> = async (ctx, next) => {
-      const obj = await evaluateScript(item[0], ctx) as SimpleRequestContext;
-      ctx.url = obj.url;
-      ctx.body = typeof ctx.body === 'string' ? obj.body : ctx.body;
-      ctx.headers = new Headers(obj.headers);
+      try {
+        const obj = await evaluateScript(item[0], ctx) as SimpleRequestContext;
+        if (obj) {
+          ctx.url = obj.url;
+          ctx.body = typeof ctx.body === 'string' ? obj.body : ctx.body;
+          ctx.headers = new Headers(obj.headers);
+        }
+      } catch (e) {
+        // eslint-disable-next-line no-console
+        console.error(e);
+      }
+
       await next();
     };
     window.netpalInterceptors.request.push(req);
@@ -61,8 +69,15 @@ function reload(interceptors: TransformedSimpleMiddleware[]) {
     });
 
     const res: Middleware<ResponseContext> = async (ctx, next) => {
-      const obj = await evaluateScript(item[1], ctx) as SimpleResponseContext;
-      ctx.body = typeof ctx.body === 'string' ? obj.body : ctx.body;
+      try {
+        const obj = await evaluateScript(item[1], ctx) as SimpleResponseContext;
+        if (obj) {
+          ctx.body = typeof ctx.body === 'string' ? obj.body : ctx.body;
+        }
+      } catch (e) {
+        // eslint-disable-next-line no-console
+        console.error(e);
+      }
       await next();
     };
     window.netpalInterceptors.response.push(res);

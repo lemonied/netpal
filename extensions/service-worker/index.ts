@@ -10,24 +10,24 @@ async function getCurrentTab() {
   return tab;
 }
 
-let sidePanelIsOpen = false;
+let panelPort: chrome.runtime.Port | undefined = undefined;
 async function notifySidePanelStat() {
   const tabId = (await getCurrentTab()).id;
   if (typeof tabId === 'number') {
     chrome.tabs.sendMessage(tabId, buildMessage({
       type: 'panel-status',
       key: randomStr('panel-status'),
-      data: sidePanelIsOpen,
+      data: !!panelPort,
     }));
   }
 }
 
 chrome.runtime.onConnect.addListener((port) => {
   if (port.name === 'sidePanelStat') {
-    sidePanelIsOpen = true;
+    panelPort = port;
     notifySidePanelStat();
     port.onDisconnect.addListener(() => {
-      sidePanelIsOpen = false;
+      panelPort = undefined;
       notifySidePanelStat();
     });
   }
@@ -46,7 +46,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
       case isMatchType(message, 'get-panel-status'): {
         sendResponse({
           ...message,
-          data: sidePanelIsOpen,
+          data: !!panelPort,
           type: `${message.type}${messageReplySuffix}`,
         });
         return true;
@@ -60,6 +60,25 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
             type: `${message.type}${messageReplySuffix}`,
           });
         })();
+        return true;
+      }
+      case isMatchType(message, 'evaluate-script'): {
+        if (panelPort) {
+          const listener = (msg: any) => {
+            if (isBridgeMessage(msg) && msg.key === message.key) {
+              sendResponse(msg);
+              panelPort?.onMessage.removeListener(listener);
+            }
+          };
+          panelPort.onMessage.addListener(listener);
+          panelPort.postMessage(message);
+        } else {
+          sendResponse({
+            ...message,
+            type: `${message.type}${messageReplySuffix}`,
+            data: undefined,
+          });
+        }
         return true;
       }
       default: {
