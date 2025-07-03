@@ -9,7 +9,7 @@
     "dev:content": "npm run build:content -- -w",
     "dev:service": "npm run build:service -- -w",
     "build:web": "vite build -c vite.config.ts",
-    "build:monaco": "rm -r ./public/monaco-editor && cp -r ./node_modules/monaco-editor/min ./public/monaco-editor",
+    "build:monaco": "rm -rf ./public/monaco-editor && cp -r ./node_modules/monaco-editor/min ./public/monaco-editor",
     "build:content": "vite build -c vite.config.content.ts",
     "build:service": "vite build -c vite.config.service.ts",
     "build": "npm run lint && npm run build:monaco && npm run build:web -- --emptyOutDir true && npm run build:content && npm run build:service",
