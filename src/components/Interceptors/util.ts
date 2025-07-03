@@ -19,9 +19,25 @@ export interface SimpleResponseContext extends SharedSimpleContext {
 export interface SimpleResponseInterceptor {
   (ctx: SimpleResponseContext): Promise<SimpleResponseContext>;
 }
+/**
+ * @returns
+ */
+export const DEFAULT_REQUEST_INTERCEPTOR = `
+/**
+ * @param {RequestContext} ctx
+ * @returns {Promise<RequestContext>}
+ */
+async function requestInterceptor(ctx) {
+  return ctx;
+};
+`.trim();
 
-export const interceptorFnStr = `
-(ctx) => {
+export const DEFAULT_RESPONSE_INTERCEPTOR = `
+/**
+ * @param {ResponseContext} ctx
+ * @returns {Promise<ResponseContext>}
+ */
+async function responseInterceptor(ctx) {
   return ctx;
 };
 `.trim();

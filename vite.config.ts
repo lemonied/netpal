@@ -6,6 +6,7 @@ import sharedConfig from './vite.config.shared';
 export default defineConfig(() => {
 
   return mergeConfig<UserConfig, UserConfig>(sharedConfig, {
+    base: '/',
     build: {
       rollupOptions: {
         input: {

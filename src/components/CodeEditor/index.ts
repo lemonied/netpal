@@ -1,31 +1,34 @@
 import Editor, { loader } from '@monaco-editor/react';
 
-import * as monaco from 'monaco-editor';
-import editorWorker from 'monaco-editor/esm/vs/editor/editor.worker?worker';
-import jsonWorker from 'monaco-editor/esm/vs/language/json/json.worker?worker';
-import cssWorker from 'monaco-editor/esm/vs/language/css/css.worker?worker';
-import htmlWorker from 'monaco-editor/esm/vs/language/html/html.worker?worker';
-import tsWorker from 'monaco-editor/esm/vs/language/typescript/ts.worker?worker';
-
-self.MonacoEnvironment = {
-  getWorker(_, label) {
-    if (label === 'json') {
-      return new jsonWorker();
-    }
-    if (label === 'css' || label === 'scss' || label === 'less') {
-      return new cssWorker();
-    }
-    if (label === 'html' || label === 'handlebars' || label === 'razor') {
-      return new htmlWorker();
-    }
-    if (label === 'typescript' || label === 'javascript') {
-      return new tsWorker();
-    }
-    return new editorWorker();
+loader.config({
+  'vs/nls': {
+    availableLanguages: {
+      '*': 'zh-cn',
+    },
   },
-};
+  paths: {
+    vs: new URL(`${import.meta.env.BASE_URL}monaco-editor/vs`, window.location.href).href,
+  },
+});
 
-loader.config({ monaco });
+loader.init().then(monaco => {
+  monaco.languages.typescript.javascriptDefaults.addExtraLib(`
+/**
+ * @typedef {Object} RequestContext
+ * @property {string} url
+ * @property {[string, string][]} headers
+ * @property {string} body
+ */
+
+/**
+ * @typedef {Object} ResponseContext
+ * @property {number} status
+ * @property {[string, string][]} headers
+ * @property {string} body
+ * @property {RequestContext} request
+ */
+`);
+});
 
 export default Editor;
 

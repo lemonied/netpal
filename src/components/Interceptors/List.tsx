@@ -3,7 +3,7 @@ import Form from 'form-pilot';
 import Item from './Item';
 import { Button } from '@mui/material';
 import { Add } from '@mui/icons-material';
-import { interceptorFnStr } from './util';
+import { DEFAULT_REQUEST_INTERCEPTOR, DEFAULT_RESPONSE_INTERCEPTOR } from './util';
 import { debounce } from 'lodash';
 import { getInterceptors, saveInterceptor } from '@/utils';
 
@@ -67,8 +67,8 @@ const Interceptors = () => {
                     }
                     onClick={() => {
                       control.add({
-                        request: interceptorFnStr,
-                        response: interceptorFnStr,
+                        request: DEFAULT_REQUEST_INTERCEPTOR,
+                        response: DEFAULT_RESPONSE_INTERCEPTOR,
                       });
                     }}
                   >添加拦截器</Button>

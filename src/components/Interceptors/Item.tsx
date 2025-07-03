@@ -1,7 +1,7 @@
-import Editor from '@/components/CodeEditor';
 import Form from 'form-pilot';
 import { FocusBorder } from '../FocusBorder';
 import { Card, CardContent, Stack, Typography } from '@mui/material';
+import { ContextEditor } from './Editor';
 
 const Item = () => {
   return (
@@ -26,16 +26,7 @@ const Item = () => {
               <Form.Item
                 name="request"
               >
-                <Editor
-                  language="javascript"
-                  height={200}
-                  options={{
-                    tabSize: 2,
-                    minimap: {
-                      enabled: false,
-                    },
-                  }}
-                />
+                <ContextEditor />
               </Form.Item>
             </FocusBorder>
           </CardContent>
@@ -57,16 +48,7 @@ const Item = () => {
               <Form.Item
                 name="response"
               >
-                <Editor
-                  language="javascript"
-                  height={200}
-                  options={{
-                    tabSize: 2,
-                    minimap: {
-                      enabled: false,
-                    },
-                  }}
-                />
+                <ContextEditor />
               </Form.Item>
             </FocusBorder>
           </CardContent>
