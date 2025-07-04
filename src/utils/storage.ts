@@ -6,7 +6,7 @@ export async function saveInterceptor(value: any) {
   }
 }
 
-export async function getInterceptors(): Promise<string[][]> {
+export async function getInterceptors(): Promise<any[]> {
   if (IS_CHROME_EXTENSION) {
     const value = await chrome.storage.local.get(['interceptors']);
     try {

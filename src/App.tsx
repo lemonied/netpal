@@ -1,9 +1,22 @@
 import React from 'react';
 import RootEntry from '@/components/RootEntry';
 import { IS_CHROME_EXTENSION } from '@/utils';
+import { createTheme, ThemeProvider } from '@mui/material';
 
 const port = IS_CHROME_EXTENSION ? chrome.runtime.connect({ name: 'sidePanelStat' }) : undefined;
 const iframeSrc = IS_CHROME_EXTENSION ? chrome.runtime.getURL('extensions/sandbox/index.html') : undefined;
+
+const theme = createTheme({
+  components: {
+    MuiTab: {
+      styleOverrides: {
+        root: {
+          textTransform: 'none',
+        },
+      },
+    },
+  },
+});
 
 function App() {
 
@@ -29,7 +42,9 @@ function App() {
 
   return (
     <>
-      <RootEntry />
+      <ThemeProvider theme={theme}>
+        <RootEntry />
+      </ThemeProvider>
       {
         IS_CHROME_EXTENSION && (
           <iframe

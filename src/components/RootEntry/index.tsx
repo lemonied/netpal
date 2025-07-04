@@ -1,13 +1,18 @@
 import Interceptors from '../Interceptors';
-import { Box, Tab, Tabs, Grid } from '@mui/material';
+import { Box, Tab, Tabs, Grid, styled } from '@mui/material';
 import Form from 'form-pilot';
+
+const RootWrapper = styled(Box)`
+  min-width: 500px;
+  overflow: auto;
+`;
 
 const RootEntry = () => {
 
   const control = Form.useControl();
 
   return (
-    <>
+    <RootWrapper>
       <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
         <Grid
           container
@@ -20,8 +25,6 @@ const RootEntry = () => {
           >
             <Tabs>
               <Tab label="xhr/fetch拦截器" value={0} />
-              <Tab label="Item Two" value={1} />
-              <Tab label="Item Three" value={2} />
             </Tabs>
           </Form.Item>
         </Grid>
@@ -43,7 +46,7 @@ const RootEntry = () => {
           }
         </Form.Update>
       </Box>
-    </>
+    </RootWrapper>
   );
 
 };
