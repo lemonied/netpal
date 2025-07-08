@@ -1,27 +1,25 @@
-interface SharedSimpleContext {
+
+export interface SimpleRequestContext {
+  url: string;
   headers: [string, string][];
   body?: string;
-}
-
-export interface SimpleRequestContext extends SharedSimpleContext {
-  url: string;
 }
 
 export interface SimpleRequestInterceptor {
   (ctx: SimpleRequestContext): Promise<SimpleRequestContext>;
 }
 
-export interface SimpleResponseContext extends SharedSimpleContext {
-  status: number;
-  request: SimpleRequestContext;
+export interface SimpleResponseContext {
+  readonly headers: [string, string][];
+  body?: string;
+  readonly status: number;
+  readonly request: SimpleRequestContext;
 }
 
 export interface SimpleResponseInterceptor {
   (ctx: SimpleResponseContext): Promise<SimpleResponseContext>;
 }
-/**
- * @returns
- */
+
 export const DEFAULT_REQUEST_INTERCEPTOR = `
 /**
  * @param {RequestContext} ctx

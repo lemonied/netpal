@@ -22,20 +22,18 @@ if (IS_CHROME_EXTENSION) {
 
 loader.init().then(monaco => {
   monaco.languages.typescript.javascriptDefaults.addExtraLib(`
-/**
- * @typedef {Object} RequestContext
- * @property {string} url
- * @property {[string, string][]} headers
- * @property {string} body
- */
+interface RequestContext {
+  url: string;
+  headers: [string, string][];
+  body?: string;
+}
 
-/**
- * @typedef {Object} ResponseContext
- * @property {number} status
- * @property {[string, string][]} headers
- * @property {string} body
- * @property {RequestContext} request
- */
+interface ResponseContext {
+  readonly headers: [string, string][];
+  body?: string;
+  readonly status: number;
+  readonly request: SimpleRequestContext;
+}
 `);
 });
 
