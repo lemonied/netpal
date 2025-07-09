@@ -51,6 +51,7 @@ export default tseslint.config(
       '@typescript-eslint/no-explicit-any': 'off',
       '@typescript-eslint/ban-ts-comment': 'off',
       '@typescript-eslint/consistent-type-imports': 'error',
+      'react-refresh/only-export-components': 'off',
     },
   },
 );

@@ -34,28 +34,44 @@ function toSimple(ctx: RequestContext | ResponseContext) {
   return null;
 }
 
-async function evaluateScript(code: string, ctx: RequestContext | ResponseContext) {
-  return await sendMessage('evaluate-script', `(async (ctx) => {const fn = ${code}\nreturn fn(ctx)})(${JSON.stringify(toSimple(ctx))})`);
+async function evaluateScript(item: Record<string, string>, ctx: RequestContext | ResponseContext) {
+  const data = ctx instanceof RequestContext ? {
+    code: item.request,
+    url: ctx.url,
+  } : {
+    code: item.request,
+    url: ctx.request.url,
+  };
+  return await sendMessage('evaluate-script', `
+(async (ctx) => {
+  if (${item.regex}.test(${JSON.stringify(data.url)})) {
+    const fn = ${data.code};
+    return fn(ctx);
+  }
+  return ctx;
+})(${JSON.stringify(toSimple(ctx))});
+`);
 }
 
 let uninstall: (() => void)[] = [];
 
-type TransformedSimpleMiddleware = [string, string];
-function reload(interceptors: TransformedSimpleMiddleware[]) {
+function reload(interceptors: any[]) {
   uninstall.forEach(fn => fn());
   uninstall = [];
   interceptors.forEach(item => {
     const req: Middleware<RequestContext> = async (ctx, next) => {
-      try {
-        const obj = await evaluateScript(item[0], ctx) as SimpleRequestContext;
-        if (obj) {
-          ctx.url = obj.url;
-          ctx.body = typeof ctx.body === 'string' ? obj.body : ctx.body;
-          ctx.headers = new Headers(obj.headers);
+      if (item.enabled) {
+        try {
+          const obj = await evaluateScript(item, ctx) as SimpleRequestContext;
+          if (obj) {
+            ctx.url = obj.url;
+            ctx.body = typeof ctx.body === 'string' ? obj.body : ctx.body;
+            ctx.headers = new Headers(obj.headers);
+          }
+        } catch (e) {
+          // eslint-disable-next-line no-console
+          console.error(e);
         }
-      } catch (e) {
-        // eslint-disable-next-line no-console
-        console.error(e);
       }
 
       await next();
@@ -69,14 +85,16 @@ function reload(interceptors: TransformedSimpleMiddleware[]) {
     });
 
     const res: Middleware<ResponseContext> = async (ctx, next) => {
-      try {
-        const obj = await evaluateScript(item[1], ctx) as SimpleResponseContext;
-        if (obj) {
-          ctx.body = typeof ctx.body === 'string' ? obj.body : ctx.body;
+      if (item.enabled) {
+        try {
+          const obj = await evaluateScript(item, ctx) as SimpleResponseContext;
+          if (obj) {
+            ctx.body = typeof ctx.body === 'string' ? obj.body : ctx.body;
+          }
+        } catch (e) {
+          // eslint-disable-next-line no-console
+          console.error(e);
         }
-      } catch (e) {
-        // eslint-disable-next-line no-console
-        console.error(e);
       }
       await next();
     };

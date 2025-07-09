@@ -1,11 +1,12 @@
 import React from 'react';
 import Form from 'form-pilot';
 import Item from './Item';
-import { Box, Button, Tab, Tabs, Typography } from '@mui/material';
-import { Add, Delete } from '@mui/icons-material';
+import { Box, Button, Chip, Stack, Typography } from '@mui/material';
 import { DEFAULT_REQUEST_INTERCEPTOR, DEFAULT_RESPONSE_INTERCEPTOR } from './util';
 import { debounce } from 'lodash';
 import { getInterceptors, saveInterceptor } from '@/utils';
+import { Add } from '@mui/icons-material';
+import { createConfirm } from '../Dialog';
 
 const debounceSave = debounce((value: any) => {
   saveInterceptor(value);
@@ -15,9 +16,8 @@ const defaultItem = {
   regex: '/.*/ig',
   request: DEFAULT_REQUEST_INTERCEPTOR,
   response: DEFAULT_RESPONSE_INTERCEPTOR,
+  enabled: true,
 };
-
-const sideTabsWidth = '120px';
 
 const Interceptors = () => {
 
@@ -33,7 +33,7 @@ const Interceptors = () => {
   React.useEffect(() => {
     getInterceptors().then(value => {
       control.setValue({
-        list: value.length ? value : [defaultItem],
+        list: value,
       });
     });
   }, [control]);
@@ -42,9 +42,6 @@ const Interceptors = () => {
     <>
       <Form
         control={control}
-        initialValues={{
-          list: [defaultItem],
-        }}
       >
         <Form.List
           name="list"
@@ -54,128 +51,84 @@ const Interceptors = () => {
               return (
                 <Box
                   sx={{
-                    display: 'flex',
                     marginTop: 1,
                   }}
                 >
                   <Box
                     sx={{
-                      flex: `0 0 ${sideTabsWidth}`,
-                      width: sideTabsWidth,
+                      padding: 1,
+                      display: 'flex',
+                      gap: 1,
+                      alignItems: 'center',
                     }}
                   >
-                    <Tabs
-                      orientation="vertical"
-                      value={tab}
-                      onChange={(_, val) => {
-                        if (typeof val === 'number') {
-                          setTab(val);
-                        } else if (val === 'add') {
-                          control.add(defaultItem);
-                        }
-                      }}
-                      sx={{
-                        borderRight: 1,
-                        borderColor: 'divider',
-                        height: '100%',
-                      }}
-                    >
-                      {
-                        fields.map(field => {
-                          return (
-                            <Tab
-                              value={field.name}
-                              key={field.key}
-                              label={
-                                <Form.Group name={field.name} key={field.key}>
-                                  <Form.Update>
-                                    {
-                                      (itemControl) => {
-                                        return (
-                                          <Box>
-                                            <Typography
-                                              sx={{
-                                                textOverflow: 'ellipsis',
-                                                whiteSpace: 'nowrap',
-                                                overflow: 'hidden',
-                                                fontSize: '14px',
-                                              }}
-                                            >{itemControl?.getValue()?.regex}</Typography>
-                                          </Box>
-                                        );
-                                      }
-                                    }
-                                  </Form.Update>
-                                </Form.Group>
+                    {
+                      fields.map(field => {
+                        return (
+                          <Form.Group name={field.name} key={field.key}>
+                            <Form.Update>
+                              {
+                                (itemControl) => (
+                                  <Chip
+                                    key={field.key}
+                                    onClick={() => {
+                                      setTab(field.name);
+                                    }}
+                                    variant={field.name === tab ? 'filled' : 'outlined'}
+                                    onDelete={() => {
+                                      createConfirm({
+                                        title: '警告',
+                                        content: (
+                                          <Stack
+                                            direction="row"
+                                            alignItems="center"
+                                            spacing={1}
+                                          >
+                                            <Typography>确定删除</Typography>
+                                            <Chip
+                                              size="small"
+                                              color="warning"
+                                              label={itemControl?.getValue()?.regex}
+                                            />
+                                          </Stack>
+                                        ),
+                                      }).then((confirm) => {
+                                        if (confirm) {
+                                          control.remove(field.name);
+                                          if (field.name === tab) {
+                                            setTab(Math.max(0, field.name - 1));
+                                          }
+                                        }
+                                      });
+                                    }}
+                                    color={itemControl?.getValue()?.enabled ? 'primary' : 'default'}
+                                    label={itemControl?.getValue()?.regex}
+                                  />
+                                )
                               }
-                            />
-                          );
-                        })
+                            </Form.Update>
+                          </Form.Group>
+                        );
+                      })
+                    }
+                    <Button
+                      variant="outlined"
+                      size="small"
+                      startIcon={
+                        <Add />
                       }
-                      <Tab
-                        value="add"
-                        sx={{
-                          padding: 1,
-                        }}
-                        label={
-                          <Box
-                            sx={{
-                              display: 'flex',
-                              alignItems: 'center',
-                            }}
-                          >
-                            <Add
-                              sx={{
-                                fontSize: 18,
-                              }}
-                            />
-                            <Typography
-                              sx={{
-                                fontSize: 14,
-                              }}
-                            >新增拦截器</Typography>
-                          </Box>
-                        }
-                      />
-                    </Tabs>
+                      onClick={() => control.add(defaultItem)}
+                    >新增拦截器</Button>
                   </Box>
                   {
                     (() => {
                       const field = fields.find(field => field.name === tab);
                       if (field) {
                         return (
-                          <Box
-                            sx={{
-                              flex: `0 0 calc(100% - ${sideTabsWidth})`,
-                              width: `calc(100% - ${sideTabsWidth})`,
-                            }}
-                          >
+                          <Box>
                             <Form.Group name={field.name} key={field.key}>
                               <Item />
                             </Form.Group>
-                            {
-                              fields.length > 1 && (
-                                <Box
-                                  padding={2}
-                                >
-                                  <Button
-                                    fullWidth
-                                    startIcon={
-                                      <Delete />
-                                    }
-                                    onClick={e => {
-                                      e.stopPropagation();
-                                      control.remove(tab);
-                                      setTab(pre => {
-                                        return Math.max(pre - 1, 0);
-                                      });
-                                    }}
-                                    color="error"
-                                    variant="outlined"
-                                  >删除</Button>
-                                </Box>
-                              )
-                            }
                           </Box>
                         );
                       }

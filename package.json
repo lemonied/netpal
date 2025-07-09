@@ -23,7 +23,7 @@
     "@monaco-editor/react": "^4.7.0",
     "@mui/icons-material": "^7.1.2",
     "@mui/material": "^7.1.2",
-    "form-pilot": "^0.0.4",
+    "form-pilot": "^0.0.5",
     "lodash": "^4.17.21",
     "monaco-editor": "^0.52.2",
     "react": "^19.1.0",

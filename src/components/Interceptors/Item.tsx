@@ -1,6 +1,6 @@
 import Form from 'form-pilot';
 import { FocusBorder } from '../FocusBorder';
-import { Box, Paper, Stack, TextField, Typography } from '@mui/material';
+import { Box, Paper, Stack, Switch, TextField, Typography } from '@mui/material';
 import { ContextEditor } from './Editor';
 
 const Item = () => {
@@ -13,6 +13,30 @@ const Item = () => {
       <Stack
         spacing={2}
       >
+        <Stack
+          direction="row"
+          alignItems="center"
+        >
+          <Form.Item
+            name="enabled"
+            valuePropName="checked"
+          >
+            <Switch />
+          </Form.Item>
+          <Form.Update
+            condition={(newValue, oldValue) => {
+              return newValue.enabled !== oldValue.enabled;
+            }}
+          >
+            {
+              (ctl) => {
+                return (
+                  <Typography>{ctl?.getValue()?.enabled ? '启用' : '禁用'}</Typography>
+                );
+              }
+            }
+          </Form.Update>
+        </Stack>
         <Form.Item
           name="regex"
         >
