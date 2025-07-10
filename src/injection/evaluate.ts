@@ -36,18 +36,13 @@ function toSimple(ctx: RequestContext | ResponseContext) {
 }
 
 async function evaluateScript(item: Record<string, string>, ctx: RequestContext | ResponseContext) {
-  const data = ctx instanceof RequestContext ? {
-    code: item.request,
-    url: ctx.url,
-  } : {
-    code: item.request,
-    url: ctx.request.url,
-  };
+  const isRequest = ctx instanceof RequestContext;
+  const code = isRequest ? item.request : item.response;
   return await sendMessage('evaluate-script', `
 const frameURL = ${JSON.stringify(window.location.href)};
 (async (ctx) => {
-  if (new RegExp(${escapeRegExp(item.regex)}).test(${JSON.stringify(data.url)})) {
-    const fn = ${data.code};
+  if (new RegExp(${JSON.stringify(escapeRegExp(item.regex))}).test(${isRequest ? 'ctx.url' : 'ctx.request.url'})) {
+    const fn = ${code};
     return fn(ctx);
   }
   return ctx;
@@ -63,16 +58,11 @@ function reload(interceptors: any[]) {
   interceptors.forEach(item => {
     const req: Middleware<RequestContext> = async (ctx, next) => {
       if (item.enabled) {
-        try {
-          const obj = await evaluateScript(item, ctx) as SimpleRequestContext;
-          if (obj) {
-            ctx.url = obj.url;
-            ctx.body = typeof ctx.body === 'string' ? obj.body : ctx.body;
-            ctx.headers = new Headers(obj.headers);
-          }
-        } catch (e) {
-          // eslint-disable-next-line no-console
-          console.error(e);
+        const obj = await evaluateScript(item, ctx) as SimpleRequestContext;
+        if (obj) {
+          ctx.url = obj.url;
+          ctx.body = typeof ctx.body === 'string' ? obj.body : ctx.body;
+          ctx.headers = new Headers(obj.headers);
         }
       }
 
@@ -88,14 +78,9 @@ function reload(interceptors: any[]) {
 
     const res: Middleware<ResponseContext> = async (ctx, next) => {
       if (item.enabled) {
-        try {
-          const obj = await evaluateScript(item, ctx) as SimpleResponseContext;
-          if (obj) {
-            ctx.body = typeof ctx.body === 'string' ? obj.body : ctx.body;
-          }
-        } catch (e) {
-          // eslint-disable-next-line no-console
-          console.error(e);
+        const obj = await evaluateScript(item, ctx) as SimpleResponseContext;
+        if (obj) {
+          ctx.body = typeof ctx.body === 'string' ? obj.body : ctx.body;
         }
       }
       await next();
