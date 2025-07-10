@@ -2,8 +2,8 @@ import React from 'react';
 import RootEntry from '@/components/RootEntry';
 import { IS_CHROME_EXTENSION } from '@/utils';
 import { createTheme, ThemeProvider } from '@mui/material';
+import { sidePanelPort } from './components/Interceptors';
 
-const port = IS_CHROME_EXTENSION ? chrome.runtime.connect({ name: 'sidePanelStat' }) : undefined;
 const iframeSrc = IS_CHROME_EXTENSION ? chrome.runtime.getURL('extensions/sandbox/index.html') : undefined;
 
 const theme = createTheme({
@@ -27,15 +27,15 @@ function App() {
     const listener = (message: any) => {
       iframeRef.current?.contentWindow?.postMessage(message, '*');
     };
-    port?.onMessage.addListener(listener);
+    sidePanelPort?.onMessage.addListener(listener);
 
     const windowListener = (e: MessageEvent) => {
-      port?.postMessage(e.data);
+      sidePanelPort?.postMessage(e.data);
     };
     window.addEventListener('message', windowListener);
 
     return () => {
-      port?.onMessage.removeListener(listener);
+      sidePanelPort?.onMessage.removeListener(listener);
       window.removeEventListener('message', windowListener);
     };
   }, []);

@@ -4,16 +4,22 @@ import Item from './Item';
 import { Box, Button, Chip, Stack, Typography } from '@mui/material';
 import { DEFAULT_REQUEST_INTERCEPTOR, DEFAULT_RESPONSE_INTERCEPTOR } from './util';
 import { debounce } from 'lodash';
-import { getInterceptors, saveInterceptor } from '@/utils';
+import { buildMessage, getInterceptors, randomStr, saveInterceptor } from '@/utils';
 import { Add } from '@mui/icons-material';
 import { createConfirm } from '../Dialog';
+import { sidePanelPort } from './sidePanelPort';
 
-const debounceSave = debounce((value: any) => {
-  saveInterceptor(value);
-});
+const debounceSave = debounce(async (value: any) => {
+  await saveInterceptor(value);
+  sidePanelPort?.postMessage(buildMessage({
+    type: 'interceptors-reload',
+    key: randomStr('interceptors-reload'),
+    data: await getInterceptors(),
+  }));
+}, 200);
 
 const defaultItem = {
-  regex: '/.*/ig',
+  regex: '.*',
   request: DEFAULT_REQUEST_INTERCEPTOR,
   response: DEFAULT_RESPONSE_INTERCEPTOR,
   enabled: true,

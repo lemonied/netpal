@@ -5,6 +5,7 @@ import type {
   SimpleRequestContext,
   SimpleResponseContext,
 } from '@/components/Interceptors';
+import { escapeRegExp } from 'lodash';
 
 function transformHeaders(headers: Headers) {
   return Array.from(headers.entries());
@@ -43,8 +44,9 @@ async function evaluateScript(item: Record<string, string>, ctx: RequestContext 
     url: ctx.request.url,
   };
   return await sendMessage('evaluate-script', `
+const frameURL = ${JSON.stringify(window.location.href)};
 (async (ctx) => {
-  if (${item.regex}.test(${JSON.stringify(data.url)})) {
+  if (new RegExp(${escapeRegExp(item.regex)}).test(${JSON.stringify(data.url)})) {
     const fn = ${data.code};
     return fn(ctx);
   }

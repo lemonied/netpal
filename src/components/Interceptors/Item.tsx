@@ -1,6 +1,6 @@
 import Form from 'form-pilot';
 import { FocusBorder } from '../FocusBorder';
-import { Box, Paper, Stack, Switch, TextField, Typography } from '@mui/material';
+import { Box, Stack, Switch, TextField, Typography } from '@mui/material';
 import { ContextEditor } from './Editor';
 
 const Item = () => {
@@ -17,32 +17,47 @@ const Item = () => {
           direction="row"
           alignItems="center"
         >
-          <Form.Item
-            name="enabled"
-            valuePropName="checked"
-          >
-            <Switch />
-          </Form.Item>
-          <Form.Update
-            condition={(newValue, oldValue) => {
-              return newValue.enabled !== oldValue.enabled;
+          <Box
+            sx={{
+              flex: 1,
             }}
           >
-            {
-              (ctl) => {
-                return (
-                  <Typography>{ctl?.getValue()?.enabled ? '启用' : '禁用'}</Typography>
-                );
+            <Form.Item
+              name="regex"
+            >
+              <TextField label="路径(正则表达式)" variant="outlined" fullWidth />
+            </Form.Item>
+          </Box>
+          <Stack
+            direction="row"
+            alignItems="center"
+            sx={{
+              flex: '0 0 150px',
+              width: 150,
+            }}
+          >
+            <Form.Item
+              name="enabled"
+              valuePropName="checked"
+            >
+              <Switch />
+            </Form.Item>
+            <Form.Update
+              condition={(newValue, oldValue) => {
+                return newValue.enabled !== oldValue.enabled;
+              }}
+            >
+              {
+                (ctl) => {
+                  return (
+                    <Typography>{ctl?.getValue()?.enabled ? '启用' : '禁用'}</Typography>
+                  );
+                }
               }
-            }
-          </Form.Update>
+            </Form.Update>
+          </Stack>
         </Stack>
-        <Form.Item
-          name="regex"
-        >
-          <TextField label="路径(正则表达式)" variant="outlined" />
-        </Form.Item>
-        <Paper elevation={0}>
+        <Box>
           <Typography
             gutterBottom
             sx={{
@@ -61,8 +76,8 @@ const Item = () => {
               <ContextEditor />
             </Form.Item>
           </FocusBorder>
-        </Paper>
-        <Paper elevation={0}>
+        </Box>
+        <Box>
           <Typography
             gutterBottom
             sx={{
@@ -81,7 +96,7 @@ const Item = () => {
               <ContextEditor />
             </Form.Item>
           </FocusBorder>
-        </Paper>
+        </Box>
       </Stack>
     </Box>
   );
