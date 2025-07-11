@@ -65,7 +65,7 @@ function reload(interceptors: any[]) {
           cancel,
           evaluateScript<SimpleRequestContext>(item, ctx),
         ]);
-        if (obj) {
+        if (typeof obj !== 'undefined') {
           ctx.url = obj.url;
           ctx.body = typeof ctx.body === 'string' ? obj.body : ctx.body;
           ctx.headers = new Headers(obj.headers);
@@ -88,7 +88,7 @@ function reload(interceptors: any[]) {
           cancel,
           evaluateScript<SimpleResponseContext>(item, ctx),
         ]);
-        if (obj) {
+        if (typeof obj !== 'undefined') {
           ctx.body = typeof ctx.body === 'string' ? obj.body : ctx.body;
         }
       }
