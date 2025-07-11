@@ -35,7 +35,7 @@ function toSimple(ctx: RequestContext | ResponseContext) {
   return null;
 }
 
-async function evaluateScript(item: Record<string, string>, ctx: RequestContext | ResponseContext) {
+async function evaluateScript<T=any>(item: Record<string, string>, ctx: RequestContext | ResponseContext) {
   const isRequest = ctx instanceof RequestContext;
   const code = isRequest ? item.request : item.response;
   return await sendMessage('evaluate-script', `
@@ -47,7 +47,7 @@ const frameURL = ${JSON.stringify(window.location.href)};
   }
   return ctx;
 })(${JSON.stringify(toSimple(ctx))});
-`);
+`) as T;
 }
 
 let uninstall: (() => void)[] = [];
@@ -56,9 +56,15 @@ function reload(interceptors: any[]) {
   uninstall.forEach(fn => fn());
   uninstall = [];
   interceptors.forEach(item => {
+    let resolved: (() => void) | undefined = undefined;
+    const cancel = new Promise<void>((resolve) => resolved = resolve);
+    uninstall.push(() => resolved?.());
     const req: Middleware<RequestContext> = async (ctx, next) => {
       if (item.enabled) {
-        const obj = await evaluateScript(item, ctx) as SimpleRequestContext;
+        const obj = await Promise.race([
+          cancel,
+          evaluateScript<SimpleRequestContext>(item, ctx),
+        ]);
         if (obj) {
           ctx.url = obj.url;
           ctx.body = typeof ctx.body === 'string' ? obj.body : ctx.body;
@@ -78,7 +84,10 @@ function reload(interceptors: any[]) {
 
     const res: Middleware<ResponseContext> = async (ctx, next) => {
       if (item.enabled) {
-        const obj = await evaluateScript(item, ctx) as SimpleResponseContext;
+        const obj = await Promise.race([
+          cancel,
+          evaluateScript<SimpleResponseContext>(item, ctx),
+        ]);
         if (obj) {
           ctx.body = typeof ctx.body === 'string' ? obj.body : ctx.body;
         }
