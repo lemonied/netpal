@@ -20,26 +20,6 @@ if (IS_CHROME_EXTENSION) {
   };
 }
 
-loader.init().then(monaco => {
-  monaco.languages.typescript.javascriptDefaults.addExtraLib(`
-
-declare const frameURL: string;
-
-interface RequestContext {
-  url: string;
-  headers: [string, string][];
-  body?: string;
-}
-
-interface ResponseContext {
-  readonly headers: [string, string][];
-  body?: string;
-  readonly status: number;
-  readonly request: SimpleRequestContext;
-}
-`);
-});
-
 export default Editor;
 
 export * from '@monaco-editor/react';

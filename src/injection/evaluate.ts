@@ -1,6 +1,7 @@
-import { sendMessage, messageListener } from '@/utils';
+import { emitMessageFromPage, messageListenerForPage, sendMessageFromPage } from '@/utils';
 import type { Middleware } from '@/utils';
-import { RequestContext, ResponseContext } from './interceptor';
+import { RequestContext } from './interceptor';
+import type { ResponseContext } from './interceptor';
 import type {
   SimpleRequestContext,
   SimpleResponseContext,
@@ -8,7 +9,10 @@ import type {
 import { escapeRegExp } from 'lodash';
 
 function transformHeaders(headers: Headers) {
-  return Array.from(headers.entries());
+  return Array.from(headers.entries()).reduce<Record<string, string>>((pre, current) => {
+    pre[current[0]] = current[1];
+    return pre;
+  }, {});
 }
 
 function toSimpleRequest(ctx: RequestContext) {
@@ -24,29 +28,25 @@ function toSimple(ctx: RequestContext | ResponseContext) {
   if (ctx instanceof RequestContext) {
     return toSimpleRequest(ctx);
   }
-  if (ctx instanceof ResponseContext) {
-    return {
-      headers: transformHeaders(ctx.headers),
-      status: ctx.status,
-      body: typeof ctx.body === 'string' ? ctx.body : undefined,
-      request: toSimpleRequest(ctx.request),
-    } satisfies SimpleResponseContext;
-  }
-  return null;
+  return {
+    headers: transformHeaders(ctx.headers),
+    status: ctx.status,
+    body: typeof ctx.body === 'string' ? ctx.body : undefined,
+    request: toSimpleRequest(ctx.request),
+  } satisfies SimpleResponseContext;
 }
 
-async function evaluateScript<T=any>(item: Record<string, string>, ctx: RequestContext | ResponseContext) {
-  const isRequest = ctx instanceof RequestContext;
+async function evaluateScript<T = any>(item: Record<string, string>, simpleCtx: SimpleRequestContext | SimpleResponseContext) {
+  const isRequest = 'url' in simpleCtx;
   const code = isRequest ? item.request : item.response;
-  return await sendMessage('evaluate-script', `
+  return await sendMessageFromPage('evaluate-script', `
 const frameURL = ${JSON.stringify(window.location.href)};
 (async (ctx) => {
   if (new RegExp(${JSON.stringify(escapeRegExp(item.regex))}).test(${isRequest ? 'ctx.url' : 'ctx.request.url'})) {
     const fn = ${code};
     return fn(ctx);
   }
-  return ctx;
-})(${JSON.stringify(toSimple(ctx))});
+})(${JSON.stringify(simpleCtx)});
 `) as T;
 }
 
@@ -56,22 +56,30 @@ function reload(interceptors: any[]) {
   uninstall.forEach(fn => fn());
   uninstall = [];
   interceptors.forEach(item => {
+
+    /** cancel token */
     let resolved: (() => void) | undefined = undefined;
     const cancel = new Promise<void>((resolve) => resolved = resolve);
     uninstall.push(() => resolved?.());
+
     const req: Middleware<RequestContext> = async (ctx, next) => {
       if (item.enabled) {
+        const simpleCtx = toSimple(ctx);
         const obj = await Promise.race([
           cancel,
-          evaluateScript<SimpleRequestContext>(item, ctx),
+          evaluateScript<SimpleRequestContext>(item, simpleCtx),
         ]);
         if (typeof obj !== 'undefined') {
           ctx.url = obj.url;
           ctx.body = typeof ctx.body === 'string' ? obj.body : ctx.body;
           ctx.headers = new Headers(obj.headers);
+          emitMessageFromPage('intercept-records', {
+            key: item.key,
+            before: simpleCtx,
+            after: toSimple(ctx),
+          });
         }
       }
-
       await next();
     };
     window.netpalInterceptors.request.push(req);
@@ -84,12 +92,18 @@ function reload(interceptors: any[]) {
 
     const res: Middleware<ResponseContext> = async (ctx, next) => {
       if (item.enabled) {
+        const simpleCtx = toSimple(ctx);
         const obj = await Promise.race([
           cancel,
-          evaluateScript<SimpleResponseContext>(item, ctx),
+          evaluateScript<SimpleResponseContext>(item, simpleCtx),
         ]);
         if (typeof obj !== 'undefined') {
           ctx.body = typeof ctx.body === 'string' ? obj.body : ctx.body;
+          emitMessageFromPage('intercept-records', {
+            key: item.key,
+            before: simpleCtx,
+            after: toSimple(ctx),
+          });
         }
       }
       await next();
@@ -112,11 +126,11 @@ window.netpalInterceptors.request.push(async (_, next) => {
   await next();
 });
 
-sendMessage('get-interceptors').then(data => {
+sendMessageFromPage('get-interceptors').then(data => {
   reload(data);
   resolved();
 });
 
-messageListener('interceptors-reload', (data) => {
+messageListenerForPage('interceptors-reload', (data) => {
   reload(data);
 });

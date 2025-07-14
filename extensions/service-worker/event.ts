@@ -51,6 +51,14 @@ chrome.runtime.onConnect.addListener((port) => {
   }
 });
 
+chrome.tabs.onActivated.addListener(async (info) => {
+  chrome.tabs.sendMessage(info.tabId, buildMessage({
+    type: 'interceptors-reload',
+    key: randomStr('interceptors-reload'),
+    data: panelPort ? await getInterceptors() : [],
+  }));
+});
+
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 
   const tabId = sender.tab?.id;
@@ -102,20 +110,14 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         }
         return true;
       }
+      case isMatchType(message, 'intercept-records'): {
+        panelPort?.postMessage(message);
+        break;
+      }
       default: {
         // nothing
       }
     }
   }
 
-});
-
-chrome.tabs.onActivated.addListener(async (info) => {
-  if (panelPort) {
-    chrome.tabs.sendMessage(info.tabId, buildMessage({
-      type: 'interceptors-reload',
-      key: randomStr('interceptors-reload'),
-      data: await getInterceptors(),
-    }));
-  }
 });

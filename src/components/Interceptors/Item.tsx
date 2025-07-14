@@ -42,19 +42,17 @@ const Item = () => {
             >
               <Switch />
             </Form.Item>
-            <Form.Update
-              condition={(newValue, oldValue) => {
-                return newValue.enabled !== oldValue.enabled;
-              }}
+            <Form.Item
+              name="enabled"
             >
               {
-                (ctl) => {
+                (p) => {
                   return (
-                    <Typography>{ctl?.getValue()?.enabled ? '启用' : '禁用'}</Typography>
+                    <Typography>{p.value ? '启用' : '禁用'}</Typography>
                   );
                 }
               }
-            </Form.Update>
+            </Form.Item>
           </Stack>
         </Stack>
         <Box>

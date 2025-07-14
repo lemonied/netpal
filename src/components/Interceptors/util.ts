@@ -1,7 +1,7 @@
 
 export interface SimpleRequestContext {
   url: string;
-  headers: [string, string][];
+  headers: Record<string, string>;
   body?: string;
 }
 
@@ -10,7 +10,7 @@ export interface SimpleRequestInterceptor {
 }
 
 export interface SimpleResponseContext {
-  readonly headers: [string, string][];
+  readonly headers: Record<string, string>;
   body?: string;
   readonly status: number;
   readonly request: SimpleRequestContext;

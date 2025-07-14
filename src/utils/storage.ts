@@ -4,6 +4,8 @@ export async function saveInterceptor(value: any) {
   if (IS_CHROME_EXTENSION) {
     return await chrome.storage.local.set({ interceptors: JSON.stringify(value) });
   }
+  // eslint-disable-next-line no-console
+  console.log('saveInterceptor', value);
 }
 
 export async function getInterceptors(): Promise<any[]> {

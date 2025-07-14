@@ -8,7 +8,7 @@ import {
   useSensor,
 } from '@dnd-kit/core';
 import React from 'react';
-import { emitMessage, messageListener, sendMessage } from '@/utils';
+import { emitMessageFromPage, messageListenerForPage, sendMessageFromPage } from '@/utils';
 import { useWindowFocus } from '@/hooks';
 import { positionFormat } from './util';
 
@@ -98,13 +98,13 @@ const FloatingAction = () => {
   }, []);
 
   React.useEffect(() => {
-    return messageListener('panel-status', (data) => {
+    return messageListenerForPage('panel-status', (data) => {
       setSidePanelOpen(data);
     });
   }, []);
 
   useWindowFocus(() => {
-    sendMessage('get-panel-status').then(data => {
+    sendMessageFromPage('get-panel-status').then(data => {
       setSidePanelOpen(data);
     });
   }, { immediate: true });
@@ -129,7 +129,7 @@ const FloatingAction = () => {
         ref={buttonRef}
         position={position}
         onClick={() => {
-          emitMessage('open-panel');
+          emitMessageFromPage('open-panel');
         }}
       />
     </DndContext>

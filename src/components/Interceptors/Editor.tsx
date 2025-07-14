@@ -1,7 +1,27 @@
 import React from 'react';
-import CodeEditor from '@/components/CodeEditor';
+import CodeEditor, { loader } from '@/components/CodeEditor';
 import type { EditorProps } from '@/components/CodeEditor';
 import type { editor } from 'monaco-editor';
+
+loader.init().then(monaco => {
+  monaco.languages.typescript.javascriptDefaults.addExtraLib(`
+
+declare const frameURL: string;
+
+interface RequestContext {
+  url: string;
+  headers: Record<string, string>;
+  body?: string;
+}
+
+interface ResponseContext {
+  readonly headers: Record<string, string>;
+  body?: string;
+  readonly status: number;
+  readonly request: SimpleRequestContext;
+}
+`);
+});
 
 const ContextEditor = (props: EditorProps) => {
 

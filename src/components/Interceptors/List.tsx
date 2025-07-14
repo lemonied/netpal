@@ -18,11 +18,14 @@ const debounceSave = debounce(async (value: any) => {
   }));
 }, 200);
 
-const defaultItem = {
-  regex: '.*',
-  request: DEFAULT_REQUEST_INTERCEPTOR,
-  response: DEFAULT_RESPONSE_INTERCEPTOR,
-  enabled: true,
+const generateDefaultItem = () => {
+  return {
+    key: randomStr('item'),
+    regex: '.*',
+    request: DEFAULT_REQUEST_INTERCEPTOR,
+    response: DEFAULT_RESPONSE_INTERCEPTOR,
+    enabled: true,
+  };
 };
 
 const Interceptors = () => {
@@ -70,8 +73,15 @@ const Interceptors = () => {
                     {
                       fields.map(field => {
                         return (
-                          <Form.Group name={field.name} key={field.key}>
-                            <Form.Update>
+                          <Form.Group
+                            name={field.name}
+                            key={field.key}
+                          >
+                            <Form.Update
+                              condition={(newVal, oldVal) => {
+                                return newVal?.regex !== oldVal?.regex || newVal?.enabled !== oldVal?.enabled;
+                              }}
+                            >
                               {
                                 (itemControl) => (
                                   <Chip
@@ -94,6 +104,9 @@ const Interceptors = () => {
                                               size="small"
                                               color="warning"
                                               label={itemControl?.getValue()?.regex}
+                                              sx={{
+                                                minWidth: 35,
+                                              }}
                                             />
                                           </Stack>
                                         ),
@@ -122,7 +135,7 @@ const Interceptors = () => {
                       startIcon={
                         <Add />
                       }
-                      onClick={() => control.add(defaultItem)}
+                      onClick={() => control.add(generateDefaultItem())}
                     >新增拦截器</Button>
                   </Box>
                   {
