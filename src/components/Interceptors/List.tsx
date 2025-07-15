@@ -7,11 +7,11 @@ import { debounce } from 'lodash';
 import { buildMessage, getInterceptors, randomStr, saveInterceptor } from '@/utils';
 import { Add } from '@mui/icons-material';
 import { createConfirm } from '../Dialog';
-import { sidePanelPort } from './sidePanelPort';
+import { getSidePanelPort } from './sidePanelPort';
 
 const debounceSave = debounce(async (value: any) => {
   await saveInterceptor(value);
-  sidePanelPort?.postMessage(buildMessage({
+  getSidePanelPort()?.postMessage(buildMessage({
     type: 'interceptors-reload',
     key: randomStr('interceptors-reload'),
     data: await getInterceptors(),

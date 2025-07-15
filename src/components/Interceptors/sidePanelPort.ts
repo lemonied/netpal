@@ -2,7 +2,18 @@ import React from 'react';
 import { IS_CHROME_EXTENSION, isBridgeMessage, isMatchType, MESSAGE_REPLY_SUFFIX } from '@/utils';
 import type { BridgeMessage } from '@/utils';
 
-export const sidePanelPort = IS_CHROME_EXTENSION ? chrome.runtime.connect({ name: 'sidePanelStat' }) : undefined;
+let sidePanelPort: chrome.runtime.Port | undefined = undefined;
+
+function initSidePanelPort() {
+  sidePanelPort = chrome.runtime.connect({ name: 'sidePanelStat' });
+  sidePanelPort.onDisconnect.addListener(initSidePanelPort);
+}
+
+if (IS_CHROME_EXTENSION) {
+  initSidePanelPort();
+}
+
+export const getSidePanelPort = () => sidePanelPort;
 
 export const useMessageListener = <T=any, R=any>(type: string, listener: (message: BridgeMessage<T>, reply: (data: R) => void) => void) => {
 

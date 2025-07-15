@@ -2,7 +2,7 @@ import React from 'react';
 import RootEntry from '@/components/RootEntry';
 import { IS_CHROME_EXTENSION } from '@/utils';
 import { createTheme, ThemeProvider } from '@mui/material';
-import { sidePanelPort } from './components/Interceptors';
+import { getSidePanelPort } from './components/Interceptors';
 
 const iframeSrc = IS_CHROME_EXTENSION ? chrome.runtime.getURL('extensions/sandbox/index.html') : undefined;
 
@@ -27,15 +27,15 @@ function App() {
     const listener = (message: any) => {
       iframeRef.current?.contentWindow?.postMessage(message, '*');
     };
-    sidePanelPort?.onMessage.addListener(listener);
+    getSidePanelPort()?.onMessage.addListener(listener);
 
     const windowListener = (e: MessageEvent) => {
-      sidePanelPort?.postMessage(e.data);
+      getSidePanelPort()?.postMessage(e.data);
     };
     window.addEventListener('message', windowListener);
 
     return () => {
-      sidePanelPort?.onMessage.removeListener(listener);
+      getSidePanelPort()?.onMessage.removeListener(listener);
       window.removeEventListener('message', windowListener);
     };
   }, []);
