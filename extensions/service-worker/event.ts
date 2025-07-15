@@ -4,7 +4,6 @@ import {
   isBridgeMessage,
   isMatchType,
   MESSAGE_REPLY_SUFFIX,
-  MESSAGE_TYPE_PREFIX,
   randomStr,
 } from '@/utils';
 import { getCurrentTab } from './util';
@@ -34,7 +33,7 @@ chrome.runtime.onConnect.addListener((port) => {
     });
     port.onMessage.addListener(async (message) => {
       switch (true) {
-        case isBridgeMessage(message) && message.type === `${MESSAGE_TYPE_PREFIX}interceptors-reload`: {
+        case isBridgeMessage(message) && isMatchType(message, 'interceptors-reload'): {
           (async () => {
             const tabId = (await getCurrentTab()).id;
             if (typeof tabId === 'number') {
@@ -46,7 +45,7 @@ chrome.runtime.onConnect.addListener((port) => {
         default: {
           // nothing
         }
-      }      
+      }
     });
   }
 });
@@ -88,34 +87,49 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         })();
         return true;
       }
-      case isMatchType(message, 'evaluate-script'): {
+      case isMatchType(message, 'intercept-records'): {
+        /**
+         * 发送给side_panel但不需要回复
+         */
+        panelPort?.postMessage(message);
+        break;
+      }
+      default: {
         /**
          * side panel 处于打开状态时，执行请求/响应拦截，否则返回undefined
          */
-        if (panelPort) {
-          const listener = (msg: any) => {
-            if (isBridgeMessage(msg) && msg.key === message.key) {
-              sendResponse(msg);
-              panelPort?.onMessage.removeListener(listener);
-            }
-          };
-          panelPort.onMessage.addListener(listener);
-          panelPort.postMessage(message);
-        } else {
+        const responseEmpty = () => {
           sendResponse({
             ...message,
             type: `${message.type}${MESSAGE_REPLY_SUFFIX}`,
             data: undefined,
           });
+        };
+        const port = panelPort;
+        if (port) {
+          const uninstallers: (() => void)[] = [];
+          const uninstall = () => uninstallers.forEach(fn => fn());
+          const messageListener = (msg: any) => {
+            if (isBridgeMessage(msg) && msg.key === message.key) {
+              sendResponse(msg);
+              uninstall();
+            }
+          };
+          const disconnectListener = () => {
+            responseEmpty();
+            uninstall();
+          };
+          uninstallers.push(() => {
+            port.onMessage.removeListener(messageListener);
+            port.onDisconnect.removeListener(disconnectListener);
+          });
+          port.onMessage.addListener(messageListener);
+          port.onDisconnect.addListener(disconnectListener);
+          port.postMessage(message);
+        } else {
+          responseEmpty();
         }
         return true;
-      }
-      case isMatchType(message, 'intercept-records'): {
-        panelPort?.postMessage(message);
-        break;
-      }
-      default: {
-        // nothing
       }
     }
   }

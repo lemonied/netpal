@@ -20,6 +20,7 @@ function toSimpleRequest(ctx: RequestContext) {
     url: new URL(ctx.url, window.location.href).href,
     headers: transformHeaders(ctx.headers),
     body: typeof ctx.body === 'string' ? ctx.body : undefined,
+    timestamp: ctx.timestamp,
   } satisfies SimpleRequestContext;
 }
 
@@ -33,6 +34,7 @@ function toSimple(ctx: RequestContext | ResponseContext) {
     status: ctx.status,
     body: typeof ctx.body === 'string' ? ctx.body : undefined,
     request: toSimpleRequest(ctx.request),
+    timestamp: ctx.timestamp,
   } satisfies SimpleResponseContext;
 }
 
@@ -74,9 +76,11 @@ function reload(interceptors: any[]) {
           ctx.body = typeof ctx.body === 'string' ? obj.body : ctx.body;
           ctx.headers = new Headers(obj.headers);
           emitMessageFromPage('intercept-records', {
+            type: 'request',
             key: item.key,
             before: simpleCtx,
             after: toSimple(ctx),
+            timestamp: Date.now(),
           });
         }
       }
@@ -100,9 +104,11 @@ function reload(interceptors: any[]) {
         if (typeof obj !== 'undefined') {
           ctx.body = typeof ctx.body === 'string' ? obj.body : ctx.body;
           emitMessageFromPage('intercept-records', {
+            type: 'response',
             key: item.key,
             before: simpleCtx,
             after: toSimple(ctx),
+            timestamp: Date.now(),
           });
         }
       }

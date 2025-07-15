@@ -1,6 +1,10 @@
 import type { Middleware } from '@/utils';
 
-export class RequestContext {
+class ContextBase {
+  timestamp = Date.now();
+}
+
+export class RequestContext extends ContextBase {
   readonly originalUrl: URL | string;
   readonly type: 'fetch' | 'xhr';
   url: string;
@@ -10,6 +14,7 @@ export class RequestContext {
     return this.originalUrl instanceof window.URL ? new URL(this.url, window.location.href) : this.url;
   }
   constructor(options: Pick<RequestContext, 'type' | 'headers' | 'body'> & { url: RequestContext['originalUrl'] }) {
+    super();
     const { type, url, headers, body } = options;
     this.type = type;
     this.originalUrl = url;
@@ -21,12 +26,13 @@ export class RequestContext {
 
 const requestInterceptors: Middleware<RequestContext>[] = [];
 
-export class ResponseContext {
+export class ResponseContext extends ContextBase {
   body: any;
   readonly request: Readonly<RequestContext>;
   readonly headers: Headers;
   readonly status: number;
   constructor(options: Pick<ResponseContext, 'body' | 'request' | 'headers' | 'status'>) {
+    super();
     const { body, request, headers, status } = options;
     this.body = body;
     this.request = request;

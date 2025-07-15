@@ -1,5 +1,6 @@
 
 export interface SimpleRequestContext {
+  readonly timestamp: number;
   url: string;
   headers: Record<string, string>;
   body?: string;
@@ -10,6 +11,7 @@ export interface SimpleRequestInterceptor {
 }
 
 export interface SimpleResponseContext {
+  readonly timestamp: number;
   readonly headers: Record<string, string>;
   body?: string;
   readonly status: number;

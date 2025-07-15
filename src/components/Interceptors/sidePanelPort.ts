@@ -1,6 +1,5 @@
 import React from 'react';
 import { IS_CHROME_EXTENSION, isBridgeMessage, isMatchType, MESSAGE_REPLY_SUFFIX } from '@/utils';
-import type { BridgeMessage } from '@/utils';
 
 let sidePanelPort: chrome.runtime.Port | undefined = undefined;
 
@@ -15,7 +14,7 @@ if (IS_CHROME_EXTENSION) {
 
 export const getSidePanelPort = () => sidePanelPort;
 
-export const useMessageListener = <T=any, R=any>(type: string, listener: (message: BridgeMessage<T>, reply: (data: R) => void) => void) => {
+export const useMessageListener = <T = any, R = any>(type: string, listener: (message: T, reply: (data: R) => void) => void) => {
 
   const typeRef = React.useRef(type);
   typeRef.current = type;
@@ -24,10 +23,10 @@ export const useMessageListener = <T=any, R=any>(type: string, listener: (messag
   listenerRef.current = listener;
 
   React.useEffect(() => {
-  
+
     const cb = (message: any) => {
       if (isBridgeMessage(message) && isMatchType(message, typeRef.current)) {
-        listenerRef.current(message, (data) => {
+        listenerRef.current(message.data, (data) => {
           sidePanelPort?.postMessage({
             ...message,
             type: `${message.key}${MESSAGE_REPLY_SUFFIX}`,
