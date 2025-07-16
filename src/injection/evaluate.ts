@@ -3,6 +3,8 @@ import type { Middleware } from '@/utils';
 import { RequestContext } from './interceptor';
 import type { ResponseContext } from './interceptor';
 import type {
+  RequestRecord,
+  ResponseRecord,
   SimpleRequestContext,
   SimpleResponseContext,
 } from '@/components/Interceptors';
@@ -15,16 +17,16 @@ function transformHeaders(headers: Headers) {
   }, {});
 }
 
-function toSimpleRequest(ctx: RequestContext) {
+function toSimpleRequest(ctx: RequestContext): SimpleRequestContext {
   return {
     url: new URL(ctx.url, window.location.href).href,
     headers: transformHeaders(ctx.headers),
     body: typeof ctx.body === 'string' ? ctx.body : undefined,
     timestamp: ctx.timestamp,
-  } satisfies SimpleRequestContext;
+  };
 }
 
-function toSimple(ctx: RequestContext | ResponseContext) {
+function toSimple(ctx: RequestContext | ResponseContext): SimpleRequestContext | SimpleResponseContext {
 
   if (ctx instanceof RequestContext) {
     return toSimpleRequest(ctx);
@@ -77,11 +79,14 @@ function reload(interceptors: any[]) {
           ctx.headers = new Headers(obj.headers);
           emitMessageFromPage('intercept-records', {
             type: 'request',
+            id: ctx.id,
             key: item.key,
-            before: simpleCtx,
-            after: toSimple(ctx),
-            timestamp: Date.now(),
-          });
+            before: simpleCtx as SimpleRequestContext,
+            after: {
+              ...toSimple(ctx),
+              timestamp: Date.now(),
+            } as SimpleRequestContext,
+          } satisfies RequestRecord);
         }
       }
       await next();
@@ -105,11 +110,14 @@ function reload(interceptors: any[]) {
           ctx.body = typeof ctx.body === 'string' ? obj.body : ctx.body;
           emitMessageFromPage('intercept-records', {
             type: 'response',
+            id: ctx.id,
             key: item.key,
-            before: simpleCtx,
-            after: toSimple(ctx),
-            timestamp: Date.now(),
-          });
+            before: simpleCtx as SimpleResponseContext,
+            after: {
+              ...toSimple(ctx),
+              timestamp: Date.now(),
+            } as SimpleResponseContext,
+          } satisfies ResponseRecord);
         }
       }
       await next();

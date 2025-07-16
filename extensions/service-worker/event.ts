@@ -96,7 +96,8 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
       }
       default: {
         /**
-         * side panel 处于打开状态时，执行请求/响应拦截，否则返回undefined
+         * 发送给side panel并且需要回复
+         * side panel处于打开状态时，执行请求/响应拦截，否则返回undefined
          */
         const responseEmpty = () => {
           sendResponse({

@@ -18,6 +18,23 @@ export interface SimpleResponseContext {
   readonly request: SimpleRequestContext;
 }
 
+interface SharedRecord {
+  id: string;
+  key: string;
+}
+
+export interface RequestRecord extends SharedRecord {
+  type: 'request';
+  before: SimpleRequestContext;
+  after: SimpleRequestContext,
+}
+
+export interface ResponseRecord extends SharedRecord {
+  type: 'response';
+  before: SimpleResponseContext;
+  after: SimpleResponseContext;
+}
+
 export interface SimpleResponseInterceptor {
   (ctx: SimpleResponseContext): Promise<SimpleResponseContext>;
 }

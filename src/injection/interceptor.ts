@@ -1,3 +1,4 @@
+import { randomStr } from '@/utils';
 import type { Middleware } from '@/utils';
 
 class ContextBase {
@@ -10,6 +11,7 @@ export class RequestContext extends ContextBase {
   url: string;
   headers: Headers;
   body: any;
+  id = randomStr('context');
   getTransformedURL() {
     return this.originalUrl instanceof window.URL ? new URL(this.url, window.location.href) : this.url;
   }
@@ -28,6 +30,7 @@ const requestInterceptors: Middleware<RequestContext>[] = [];
 
 export class ResponseContext extends ContextBase {
   body: any;
+  id: string;
   readonly request: Readonly<RequestContext>;
   readonly headers: Headers;
   readonly status: number;
@@ -38,6 +41,7 @@ export class ResponseContext extends ContextBase {
     this.request = request;
     this.headers = headers;
     this.status = status;
+    this.id = this.request.id;
   }
 }
 
