@@ -5,7 +5,14 @@ let sidePanelPort: chrome.runtime.Port | undefined = undefined;
 
 function initSidePanelPort() {
   sidePanelPort = chrome.runtime.connect({ name: 'sidePanelStat' });
-  sidePanelPort.onDisconnect.addListener(initSidePanelPort);
+  // eslint-disable-next-line no-console
+  console.log('side panel connected');
+  sidePanelPort.onDisconnect.addListener(() => {
+    window.setTimeout(initSidePanelPort, 1000);
+  });
+  window.addEventListener('beforeunload', () => {
+    sidePanelPort?.disconnect();
+  });
 }
 
 if (IS_CHROME_EXTENSION) {
