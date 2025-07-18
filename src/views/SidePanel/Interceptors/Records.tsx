@@ -1,10 +1,22 @@
 import React from 'react';
 import Form from 'form-pilot';
-import { Box, Collapse, IconButton, Stack, Table, TableBody, TableCell, TableHead, TableRow, Typography } from '@mui/material';
+import {
+  Box,
+  Collapse as MCollapse,
+  IconButton,
+  Stack,
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableRow,
+  Typography,
+} from '@mui/material';
 import { usePortMessageListener } from './sidePanelPort';
 import type { RequestRecord, ResponseRecord } from './util';
 import { KeyboardArrowDown, KeyboardArrowUp } from '@mui/icons-material';
 import { DiffEditor } from '@/components/CodeEditor';
+import Collapse from '@/components/Collapse';
 
 function safeParse(str?: string) {
   try {
@@ -70,6 +82,7 @@ const Row = (props: RowProps) => {
             }
           </IconButton>
         </TableCell>
+        <TableCell>{record.request?.after.url}</TableCell>
         <TableCell>
           {
             record.response ?
@@ -94,7 +107,7 @@ const Row = (props: RowProps) => {
       </TableRow>
       <TableRow>
         <TableCell style={{ paddingBottom: 0, paddingTop: 0 }} colSpan={6}>
-          <Collapse in={open} timeout="auto" unmountOnExit>
+          <MCollapse in={open} timeout="auto" unmountOnExit>
             <Box
               sx={{ margin: 1 }}
             >
@@ -139,7 +152,7 @@ const Row = (props: RowProps) => {
                 </Box>
               </Stack>
             </Box>
-          </Collapse>
+          </MCollapse>
         </TableCell>
       </TableRow>
     </>
@@ -149,7 +162,6 @@ const Row = (props: RowProps) => {
 const Records = () => {
 
   const [records, setRecords] = React.useState<RecordState[]>([]);
-  const [open, setOpen] = React.useState(true);
 
   const control = Form.useControlInstance();
 
@@ -178,48 +190,32 @@ const Records = () => {
   });
 
   return (
-    <Stack spacing={2}>
-      <Box
-        sx={{
-          display: 'flex',
-          alignItems: 'center',
-          gap: 1,
-        }}
-      >
-        <IconButton
-          size="small"
-          onClick={() => setOpen(pre => !pre)}
-        >
-          {
-            open ?
-              <KeyboardArrowUp /> :
-              <KeyboardArrowDown />
-          }
-        </IconButton>
+    <Collapse
+      title={
         <Typography>拦截记录</Typography>
-      </Box>
-      <Collapse in={open}>
-        <Table>
-          <TableHead>
-            <TableRow>
-              <TableCell />
-              <TableCell>状态</TableCell>
-              <TableCell>开始时间</TableCell>
-              <TableCell>结束时间</TableCell>
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            {
-              records.map((record, index) => {
-                return (
-                  <Row key={index} record={record} />
-                );
-              })
-            }
-          </TableBody>
-        </Table>
-      </Collapse>
-    </Stack>
+      }
+    >
+      <Table>
+        <TableHead>
+          <TableRow>
+            <TableCell />
+            <TableCell>URL</TableCell>
+            <TableCell>状态</TableCell>
+            <TableCell>开始时间</TableCell>
+            <TableCell>结束时间</TableCell>
+          </TableRow>
+        </TableHead>
+        <TableBody>
+          {
+            records.map((record, index) => {
+              return (
+                <Row key={index} record={record} />
+              );
+            })
+          }
+        </TableBody>
+      </Table>
+    </Collapse>
   );
 };
 

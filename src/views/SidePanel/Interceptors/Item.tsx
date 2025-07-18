@@ -13,85 +13,83 @@ const Item = () => {
         padding: 2,
       }}
     >
-      <Stack spacing={2}>
-        <Stack spacing={2}>
+      <Stack spacing={1}>
+        <Stack
+          direction="row"
+          alignItems="center"
+        >
+          <Box
+            sx={{
+              flex: 1,
+            }}
+          >
+            <Form.Item
+              name="regex"
+            >
+              <TextField label="路径(正则表达式)" variant="outlined" fullWidth />
+            </Form.Item>
+          </Box>
           <Stack
             direction="row"
             alignItems="center"
+            sx={{
+              flex: '0 0 150px',
+              width: 150,
+            }}
           >
-            <Box
-              sx={{
-                flex: 1,
-              }}
+            <Form.Item
+              name="enabled"
+              valuePropName="checked"
             >
-              <Form.Item
-                name="regex"
-              >
-                <TextField label="路径(正则表达式)" variant="outlined" fullWidth />
-              </Form.Item>
-            </Box>
-            <Stack
-              direction="row"
-              alignItems="center"
-              sx={{
-                flex: '0 0 150px',
-                width: 150,
-              }}
+              <Switch />
+            </Form.Item>
+            <Form.Item
+              name="enabled"
             >
-              <Form.Item
-                name="enabled"
-                valuePropName="checked"
-              >
-                <Switch />
-              </Form.Item>
-              <Form.Item
-                name="enabled"
-              >
-                {
-                  (p) => {
-                    return (
-                      <Typography>{p.value ? '启用' : '禁用'}</Typography>
-                    );
-                  }
+              {
+                (p) => {
+                  return (
+                    <Typography>{p.value ? '启用' : '禁用'}</Typography>
+                  );
                 }
-              </Form.Item>
-            </Stack>
+              }
+            </Form.Item>
           </Stack>
-          <Collapse
-            title={
-              <Typography>请求拦截器</Typography>
-            }
-          >
-            <FocusBorder
-              style={{
-                padding: '10px 6px',
-              }}
-            >
-              <Form.Item
-                name="request"
-              >
-                <ContextEditor />
-              </Form.Item>
-            </FocusBorder>
-          </Collapse>
-          <Collapse
-            title={
-              <Typography>响应拦截器</Typography>
-            }
-          >
-            <FocusBorder
-              style={{
-                padding: '10px 6px',
-              }}
-            >
-              <Form.Item
-                name="response"
-              >
-                <ContextEditor />
-              </Form.Item>
-            </FocusBorder>
-          </Collapse>
         </Stack>
+        <Collapse
+          title={
+            <Typography>请求拦截器</Typography>
+          }
+        >
+          <FocusBorder
+            style={{
+              padding: '10px 6px',
+            }}
+          >
+            <Form.Item
+              name="request"
+            >
+              <ContextEditor />
+            </Form.Item>
+          </FocusBorder>
+        </Collapse>
+        <Collapse
+          title={
+            <Typography>响应拦截器</Typography>
+          }
+        >
+          <FocusBorder
+            style={{
+              padding: '10px 6px',
+            }}
+          >
+            <Form.Item
+              name="response"
+            >
+              <ContextEditor />
+            </Form.Item>
+          </FocusBorder>
+        </Collapse>
         <Records />
       </Stack>
     </Box>

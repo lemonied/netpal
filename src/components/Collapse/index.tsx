@@ -3,23 +3,23 @@ import { Collapse as MCollapse, Stack, Box, IconButton } from '@mui/material';
 import type { CollapseProps as MCollapseProps } from '@mui/material';
 import { KeyboardArrowUp, KeyboardArrowDown } from '@mui/icons-material';
 
-interface CollapseProps extends Omit<MCollapseProps, 'open' | 'title'> {
+interface CollapseProps extends Omit<MCollapseProps, 'in' | 'title'> {
   defaultOpen?: boolean;
-  title: React.ReactNode;
+  title?: React.ReactNode;
 }
 const Collapse = (props: CollapseProps) => {
 
-  const { defaultOpen, title, ...restProps } = props;
+  const { defaultOpen = true, title, ...restProps } = props;
 
   const [state, setState] = React.useState(defaultOpen);
 
   return (
-    <Stack spacing={2}>
+    <Stack spacing={1}>
       <Box
         sx={{
           display: 'flex',
           alignItems: 'center',
-          gap: 1,
+          gap: '2px',
         }}
       >
         <IconButton
