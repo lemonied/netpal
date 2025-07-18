@@ -7,6 +7,7 @@ export const NETPAL_EVENT_NAME = 'NetpalEvent';
 export interface BridgeMessage<T = any> {
   type: string;
   key: string;
+  source?: 'service';
   data?: T;
   error?: string;
 }

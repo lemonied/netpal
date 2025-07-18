@@ -2,6 +2,7 @@ import {
   isBridgeMessage,
   NETPAL_EVENT_NAME,
 } from '@/utils';
+import type { BridgeMessage } from '@/utils';
 
 const isTop = window === window.top;
 
@@ -36,8 +37,8 @@ const isTop = window === window.top;
    */
   window.addEventListener(NETPAL_EVENT_NAME, ((e) => {
     const data = (e as CustomEvent).detail;
-    if (isBridgeMessage(data)) {
-      chrome.runtime.sendMessage(data).then(res => {
+    if (isBridgeMessage(data) && data.source !== 'service') {
+      chrome.runtime.sendMessage(data).then((res: BridgeMessage) => {
         window.dispatchEvent(new CustomEvent(NETPAL_EVENT_NAME, {
           detail: res,
         }));

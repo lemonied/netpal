@@ -4,9 +4,11 @@ import {
   isBridgeMessage,
   isMatchType,
   MESSAGE_REPLY_SUFFIX,
+  portListener,
   randomStr,
 } from '@/utils';
 import { getCurrentTab } from './util';
+import type { BridgeMessage } from '@/utils';
 
 /**
  * side panel 关闭状态下为undefined
@@ -19,6 +21,7 @@ async function notifySidePanelStat() {
       type: 'panel-status',
       key: randomStr('panel-status'),
       data: !!panelPort,
+      source: 'service',
     }));
   }
 }
@@ -27,26 +30,33 @@ chrome.runtime.onConnect.addListener((port) => {
   if (port.name === 'sidePanelStat') {
     panelPort = port;
     notifySidePanelStat();
-    port.onDisconnect.addListener(() => {
-      panelPort = undefined;
-      notifySidePanelStat();
-    });
-    port.onMessage.addListener(async (message) => {
-      switch (true) {
-        case isBridgeMessage(message) && isMatchType(message, 'interceptors-reload'): {
-          (async () => {
-            const tabId = (await getCurrentTab()).id;
-            if (typeof tabId === 'number') {
-              chrome.tabs.sendMessage(tabId, message);
+    portListener({
+      onDisconnect() {
+        panelPort = undefined;
+        notifySidePanelStat();
+      },
+      onMessage(message) {
+        (async () => {
+          switch (true) {
+            case isBridgeMessage(message) && isMatchType(message, 'interceptors-reload'): {
+              (async () => {
+                const tabId = (await getCurrentTab()).id;
+                if (typeof tabId === 'number') {
+                  chrome.tabs.sendMessage(tabId, {
+                    ...message,
+                    source: 'service',
+                  } satisfies BridgeMessage);
+                }
+              })();
+              break;
             }
-          })();
-          break;
-        }
-        default: {
-          // nothing
-        }
-      }
-    });
+            default: {
+              // nothing
+            }
+          }
+        })();
+      },
+    }, port);
   }
 });
 
@@ -55,6 +65,7 @@ chrome.tabs.onActivated.addListener(async (info) => {
     type: 'interceptors-reload',
     key: randomStr('interceptors-reload'),
     data: panelPort ? await getInterceptors() : [],
+    source: 'service',
   }));
 });
 
@@ -73,7 +84,8 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
           ...message,
           data: !!panelPort,
           type: `${message.type}${MESSAGE_REPLY_SUFFIX}`,
-        });
+          source: 'service',
+        } satisfies BridgeMessage);
         return true;
       }
       case isMatchType(message, 'get-interceptors'): {
@@ -83,7 +95,8 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
             ...message,
             data: interceptors,
             type: `${message.type}${MESSAGE_REPLY_SUFFIX}`,
-          });
+            source: 'service',
+          } satisfies BridgeMessage);
         })();
         return true;
       }
@@ -104,28 +117,25 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
             ...message,
             type: `${message.type}${MESSAGE_REPLY_SUFFIX}`,
             data: undefined,
-          });
+            source: 'service',
+          } satisfies BridgeMessage);
         };
         const port = panelPort;
         if (port) {
-          const uninstallers: (() => void)[] = [];
-          const uninstall = () => uninstallers.forEach(fn => fn());
-          const messageListener = (msg: any) => {
-            if (isBridgeMessage(msg) && msg.key === message.key) {
-              sendResponse(msg);
-              uninstall();
-            }
-          };
-          const disconnectListener = () => {
-            responseEmpty();
-            uninstall();
-          };
-          uninstallers.push(() => {
-            port.onMessage.removeListener(messageListener);
-            port.onDisconnect.removeListener(disconnectListener);
-          });
-          port.onMessage.addListener(messageListener);
-          port.onDisconnect.addListener(disconnectListener);
+          portListener({
+            onMessage(msg) {
+              if (isBridgeMessage(msg) && msg.key === message.key) {
+                sendResponse({
+                  ...msg,
+                  source: 'service',
+                } satisfies BridgeMessage);
+                return true;
+              }
+            },
+            onDisconnect() {
+              responseEmpty();
+            },
+          }, port);
           port.postMessage(message);
         } else {
           responseEmpty();

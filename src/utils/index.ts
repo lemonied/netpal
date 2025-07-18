@@ -3,6 +3,7 @@ export * from './bridge';
 export * from './compose';
 export * from './constants';
 export * from './page';
+export * from './port';
 export * from './prototype';
 export * from './random';
 export * from './scene';

@@ -1,8 +1,8 @@
 import React from 'react';
 import RootEntry from '@/components/RootEntry';
-import { IS_CHROME_EXTENSION } from '@/utils';
+import { IS_CHROME_EXTENSION, portListener } from '@/utils';
 import { createTheme, ThemeProvider } from '@mui/material';
-import { getSidePanelPort } from './components/Interceptors';
+import { getSidePanelPort, useSidePort } from './components/Interceptors';
 
 const iframeSrc = IS_CHROME_EXTENSION ? chrome.runtime.getURL('extensions/sandbox/index.html') : undefined;
 
@@ -21,24 +21,27 @@ const theme = createTheme({
 function App() {
 
   const iframeRef = React.useRef<HTMLIFrameElement>(null);
+  const port = useSidePort();
 
   React.useEffect(() => {
 
-    const listener = (message: any) => {
-      iframeRef.current?.contentWindow?.postMessage(message, '*');
-    };
-    getSidePanelPort()?.onMessage.addListener(listener);
-
-    const windowListener = (e: MessageEvent) => {
+    const listener = (e: MessageEvent) => {
       getSidePanelPort()?.postMessage(e.data);
     };
-    window.addEventListener('message', windowListener);
+    window.addEventListener('message', listener);
 
     return () => {
-      getSidePanelPort()?.onMessage.removeListener(listener);
-      window.removeEventListener('message', windowListener);
+      window.removeEventListener('message', listener);
     };
   }, []);
+
+  React.useEffect(() => {
+    portListener({
+      onMessage(message) {
+        iframeRef.current?.contentWindow?.postMessage(message, '*');
+      },
+    }, port);
+  }, [port]);
 
   return (
     <>
