@@ -1,4 +1,4 @@
-import FloatingAction from '@/components/FloatingAction';
+import FloatingAction from '@/views/FloatingAction';
 
 const App = () => {
   return (

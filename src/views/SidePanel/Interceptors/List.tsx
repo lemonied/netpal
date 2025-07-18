@@ -6,7 +6,7 @@ import { DEFAULT_REQUEST_INTERCEPTOR, DEFAULT_RESPONSE_INTERCEPTOR } from './uti
 import { debounce } from 'lodash';
 import { buildMessage, getInterceptors, randomStr, saveInterceptor } from '@/utils';
 import { Add } from '@mui/icons-material';
-import { createConfirm } from '../Dialog';
+import { createConfirm } from '@/components/Dialog';
 import { getSidePanelPort } from './sidePanelPort';
 
 const debounceSave = debounce(async (value: any) => {

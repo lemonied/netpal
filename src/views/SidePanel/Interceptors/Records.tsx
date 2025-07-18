@@ -1,7 +1,7 @@
 import React from 'react';
 import Form from 'form-pilot';
 import { Box, Collapse, IconButton, Stack, Table, TableBody, TableCell, TableHead, TableRow, Typography } from '@mui/material';
-import { useMessageListener } from './sidePanelPort';
+import { usePortMessageListener } from './sidePanelPort';
 import type { RequestRecord, ResponseRecord } from './util';
 import { KeyboardArrowDown, KeyboardArrowUp } from '@mui/icons-material';
 import { DiffEditor } from '@/components/CodeEditor';
@@ -153,7 +153,7 @@ const Records = () => {
 
   const control = Form.useControlInstance();
 
-  useMessageListener<RequestRecord | ResponseRecord>('intercept-records', (data) => {
+  usePortMessageListener<RequestRecord | ResponseRecord>('intercept-records', (data) => {
     if (data.key === control?.getValue()?.key) {
       setRecords(pre => {
         const index = pre.findIndex(v => v.id === data.id);

@@ -9,6 +9,9 @@ export const portListener = (option: PortListenerOption, port?: chrome.runtime.P
   const handleMessage = (message: any, port: chrome.runtime.Port) => {
     const res = option.onMessage?.(message, port);
     if (res === true) {
+      /**
+       * 返回true时取消所有订阅
+       */
       uninstall();
     }
   };

@@ -1,4 +1,4 @@
-import Interceptors from '../Interceptors';
+import Interceptors from './Interceptors';
 import { Box, Tab, Tabs, Grid, styled } from '@mui/material';
 import Form from 'form-pilot';
 
@@ -7,7 +7,7 @@ const RootWrapper = styled(Box)`
   overflow: auto;
 `;
 
-const RootEntry = () => {
+const SidePanel = () => {
 
   const control = Form.useControl();
 
@@ -51,4 +51,4 @@ const RootEntry = () => {
 
 };
 
-export default RootEntry;
+export default SidePanel;

@@ -1,8 +1,8 @@
 import React from 'react';
-import RootEntry from '@/components/RootEntry';
+import SidePanel from './views/SidePanel';
 import { IS_CHROME_EXTENSION, portListener } from '@/utils';
 import { createTheme, ThemeProvider } from '@mui/material';
-import { getSidePanelPort, useSidePort } from './components/Interceptors';
+import { getSidePanelPort, useSidePort } from './views/SidePanel/Interceptors';
 
 const iframeSrc = IS_CHROME_EXTENSION ? chrome.runtime.getURL('extensions/sandbox/index.html') : undefined;
 
@@ -36,7 +36,7 @@ function App() {
   }, []);
 
   React.useEffect(() => {
-    portListener({
+    return portListener({
       onMessage(message) {
         iframeRef.current?.contentWindow?.postMessage(message, '*');
       },
@@ -46,7 +46,7 @@ function App() {
   return (
     <>
       <ThemeProvider theme={theme}>
-        <RootEntry />
+        <SidePanel />
       </ThemeProvider>
       {
         IS_CHROME_EXTENSION && (

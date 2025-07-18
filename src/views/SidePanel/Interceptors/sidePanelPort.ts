@@ -46,7 +46,9 @@ export const useSidePort = () => {
 
 export const getSidePanelPort = () => sidePanelPort;
 
-export const useMessageListener = <T = any, R = any>(type: string, listener: (message: T, reply: (data: R) => void) => void) => {
+export const usePortMessageListener = <T = any, R = any>(type: string, listener: (message: T, reply: (data: R) => void) => void) => {
+
+  const port = useSidePort();
 
   const typeRef = React.useRef(type);
   typeRef.current = type;
@@ -56,21 +58,19 @@ export const useMessageListener = <T = any, R = any>(type: string, listener: (me
 
   React.useEffect(() => {
 
-    const cb = (message: any) => {
-      if (isBridgeMessage(message) && isMatchType(message, typeRef.current)) {
-        listenerRef.current(message.data, (data) => {
-          sidePanelPort?.postMessage({
-            ...message,
-            type: `${message.key}${MESSAGE_REPLY_SUFFIX}`,
-            data,
+    return portListener({
+      onMessage(message, port) {
+        if (isBridgeMessage(message) && isMatchType(message, typeRef.current)) {
+          listenerRef.current(message.data, (data) => {
+            port.postMessage({
+              ...message,
+              type: `${message.key}${MESSAGE_REPLY_SUFFIX}`,
+              data,
+            });
           });
-        });
-      }
-    };
-    sidePanelPort?.onMessage.addListener(cb);
-
-    return () => {
-      sidePanelPort?.onMessage.removeListener(cb);
-    };
-  }, []);
+        }
+      },
+    }, port);    
+    
+  }, [port]);
 };
