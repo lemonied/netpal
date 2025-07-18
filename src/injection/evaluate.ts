@@ -7,7 +7,7 @@ import type {
   ResponseRecord,
   SimpleRequestContext,
   SimpleResponseContext,
-} from '@/components/Interceptors';
+} from '@/views/SidePanel/Interceptors';
 import { escapeRegExp } from 'lodash';
 
 function transformHeaders(headers: Headers) {
