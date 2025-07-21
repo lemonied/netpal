@@ -50,7 +50,7 @@ export function sendMessageFromPage<T = any, R = any>(...args: Parameters<typeof
   });
 }
 
-export function messageListenerForPage<T = any>( type: BridgeMessage<T>['type'], cb: (data: T) => any) {
+export function messageListenerForPage<T = any>(type: BridgeMessage<T>['type'], cb: (data: T) => any) {
   function eventHandler(e: CustomEvent) {
     const data = e.detail;
     if (isBridgeMessage(data) && isMatchType(data, type)) {
@@ -64,13 +64,20 @@ export function messageListenerForPage<T = any>( type: BridgeMessage<T>['type'],
 }
 
 export function handleSidePanelState(callback: (open: boolean) => void) {
+  let open: boolean | undefined = undefined;
+  const cb = (data: boolean) => {
+    if (open !== data) {
+      open = data;
+      callback(data);
+    }
+  };
   const uninstaller = [
     messageListenerForPage('panel-status', (data) => {
-      callback(data);
+      cb(data);
     }),
     onWindowFocus(() => {
       sendMessageFromPage('get-panel-status').then(data => {
-        callback(data);
+        cb(data);
       });
     }, {
       immediate: true,
@@ -84,13 +91,6 @@ export function handleSidePanelState(callback: (open: boolean) => void) {
 export function handleInterceptorsChange(fn: (data?: any[]) => void) {
   const run = debounce(fn, 20);
   const uninstaller = [
-    onWindowFocus(() => {
-      sendMessageFromPage('get-interceptors').then(data => {
-        run(data);
-      });
-    }, {
-      immediate: true,
-    }),
     messageListenerForPage('interceptors-reload', (data) => {
       run(data);
     }),

@@ -12,7 +12,6 @@ import type {
   SimpleRequestContext,
   SimpleResponseContext,
 } from '@/views/SidePanel/Interceptors';
-import { escapeRegExp } from 'lodash';
 
 function transformHeaders(headers: Headers) {
   return Array.from(headers.entries()).reduce<Record<string, string>>((pre, current) => {
@@ -50,7 +49,7 @@ async function evaluateScript<T = any>(item: Record<string, string>, simpleCtx: 
   return await sendMessageFromPage('evaluate-script', `
 const frameURL = ${JSON.stringify(window.location.href)};
 (async (ctx) => {
-  if (new RegExp(${JSON.stringify(escapeRegExp(item.regex))}).test(${isRequest ? 'ctx.url' : 'ctx.request.url'})) {
+  if (new RegExp(${JSON.stringify(item.regex)}).test(${isRequest ? 'ctx.url' : 'ctx.request.url'})) {
     const fn = ${code};
     return fn(ctx);
   }
@@ -58,17 +57,17 @@ const frameURL = ${JSON.stringify(window.location.href)};
 `) as T;
 }
 
-let uninstall: (() => void)[] = [];
+let uninstaller: (() => void)[] = [];
 
 function reload(interceptors?: any[]) {
-  uninstall.forEach(fn => fn());
-  uninstall = [];
+  uninstaller.forEach(uninstall => uninstall());
+  uninstaller = [];
   interceptors?.forEach(item => {
 
     /** cancel token */
     let resolved: (() => void) | undefined = undefined;
     const cancel = new Promise<void>((resolve) => resolved = resolve);
-    uninstall.push(() => resolved?.());
+    uninstaller.push(() => resolved?.());
 
     const req: Middleware<RequestContext> = async (ctx, next) => {
       if (item.enabled) {
@@ -96,7 +95,7 @@ function reload(interceptors?: any[]) {
       await next();
     };
     window.netpalInterceptors.request.push(req);
-    uninstall.push(() => {
+    uninstaller.push(() => {
       const index = window.netpalInterceptors.request.indexOf(req);
       if (index > -1) {
         window.netpalInterceptors.request.splice(index, 1);
@@ -127,7 +126,7 @@ function reload(interceptors?: any[]) {
       await next();
     };
     window.netpalInterceptors.response.push(res);
-    uninstall.push(() => {
+    uninstaller.push(() => {
       const index = window.netpalInterceptors.response.indexOf(res);
       if (index > -1) {
         window.netpalInterceptors.response.splice(index, 1);

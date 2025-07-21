@@ -4,16 +4,16 @@ import {
   Box,
   Collapse as MCollapse,
   IconButton,
-  Stack,
   Table,
   TableBody,
   TableCell,
   TableHead,
   TableRow,
   Typography,
+  Tooltip,
 } from '@mui/material';
 import type { RequestRecord, ResponseRecord } from './util';
-import { KeyboardArrowDown, KeyboardArrowUp } from '@mui/icons-material';
+import { DeleteOutline, FolderOpen, KeyboardArrowDown, KeyboardArrowUp } from '@mui/icons-material';
 import { DiffEditor } from '@/components/CodeEditor';
 import Collapse from '@/components/Collapse';
 import { useRuntimeMessageListener } from '@/hooks';
@@ -34,34 +34,34 @@ interface RecordState {
 
 interface RowProps {
   record: RecordState;
+  column: number;
 }
 const Row = (props: RowProps) => {
 
-  const { record } = props;
+  const { record, column } = props;
   const [open, setOpen] = React.useState(false);
 
-  const requestDiff = React.useMemo(() => {
+  const diff = React.useMemo(() => {
     return {
       original: JSON.stringify({
-        ...record.request?.before,
-        body: safeParse(record.request?.before.body),
+        request: {
+          ...record.request?.before,
+          body: safeParse(record.request?.before.body),
+        },
+        response: {
+          body: safeParse(record.response?.before.body),
+          timestamp: record.response?.before.timestamp,
+        },
       }, null, 2),
       modified: JSON.stringify({
-        ...record.request?.after,
-        body: safeParse(record.request?.after.body),
-      }, null, 2),
-    };
-  }, [record]);
-
-  const responseDiff = React.useMemo(() => {
-    return {
-      original: JSON.stringify({
-        body: safeParse(record.response?.before.body),
-        timestamp: record.response?.before.timestamp,
-      }, null, 2),
-      modified: JSON.stringify({
-        body: safeParse(record.response?.after.body),
-        timestamp: record.response?.after.timestamp,
+        request: {
+          ...record.request?.after,
+          body: safeParse(record.request?.after.body),
+        },
+        response: {
+          body: safeParse(record.response?.after.body),
+          timestamp: record.response?.after.timestamp,
+        },
       }, null, 2),
     };
   }, [record]);
@@ -82,7 +82,14 @@ const Row = (props: RowProps) => {
             }
           </IconButton>
         </TableCell>
-        <TableCell>{record.request?.after.url}</TableCell>
+        <TableCell>
+          <Typography
+            sx={{
+              maxWidth: 390,
+              wordBreak: 'break-all',
+            }}
+          >{record.request?.after.url}</Typography>
+        </TableCell>
         <TableCell>
           {
             record.response ?
@@ -106,51 +113,28 @@ const Row = (props: RowProps) => {
         </TableCell>
       </TableRow>
       <TableRow>
-        <TableCell style={{ paddingBottom: 0, paddingTop: 0 }} colSpan={6}>
+        <TableCell style={{ paddingBottom: 0, paddingTop: 0 }} colSpan={column}>
           <MCollapse in={open} timeout="auto" unmountOnExit>
             <Box
               sx={{ margin: 1 }}
             >
-              <Stack gap={1}>
-                <Box>
-                  <Typography variant="h6" gutterBottom component="div">Request</Typography>
-                  <DiffEditor
-                    original={requestDiff.original}
-                    modified={requestDiff.modified}
-                    language="json"
-                    options={{
-                      readOnly: true,
-                      renderSideBySide: true,
-                      minimap: {
-                        enabled: false,
-                      },
-                      scrollbar: {
-                        arrowSize: 3,
-                      },
-                    }}
-                    height={200}
-                  />
-                </Box>
-                <Box>
-                  <Typography variant="h6" gutterBottom component="div">Response</Typography>
-                  <DiffEditor
-                    original={responseDiff.original}
-                    modified={responseDiff.modified}
-                    language="json"
-                    options={{
-                      readOnly: true,
-                      renderSideBySide: true,
-                      minimap: {
-                        enabled: false,
-                      },
-                      scrollbar: {
-                        arrowSize: 3,
-                      },
-                    }}
-                    height={200}
-                  />
-                </Box>
-              </Stack>
+              <Typography variant="h6" gutterBottom component="div">Diff</Typography>
+              <DiffEditor
+                original={diff.original}
+                modified={diff.modified}
+                language="json"
+                options={{
+                  readOnly: true,
+                  renderSideBySide: true,
+                  minimap: {
+                    enabled: false,
+                  },
+                  scrollbar: {
+                    arrowSize: 3,
+                  },
+                }}
+                height={500}
+              />
             </Box>
           </MCollapse>
         </TableCell>
@@ -165,6 +149,14 @@ const Records = () => {
 
   const control = Form.useControlInstance();
 
+  const headers = [
+    <TableCell />,
+    <TableCell>URL</TableCell>,
+    <TableCell>状态</TableCell>,
+    <TableCell>开始时间</TableCell>,
+    <TableCell>结束时间</TableCell>,
+  ];
+
   useRuntimeMessageListener<RequestRecord | ResponseRecord>('intercept-records', (data) => {
     if (data.key === control?.getValue()?.key) {
       setRecords(pre => {
@@ -178,13 +170,16 @@ const Records = () => {
           });
           return ret;
         }
-        return [
-          {
-            id: data.id,
-            [data.type]: data,
-          },
-          ...pre,
-        ];
+        if (data.type === 'request') {
+          return [
+            {
+              id: data.id,
+              [data.type]: data,
+            },
+            ...pre,
+          ];
+        }
+        return pre;
       });
     }
   });
@@ -192,26 +187,72 @@ const Records = () => {
   return (
     <Collapse
       title={
-        <Typography>拦截记录</Typography>
+        <Box
+          sx={{
+            flex: 1,
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+          }}
+        >
+          <Typography>拦截记录</Typography>
+          <Tooltip
+            title="Clear"
+            arrow
+            placement="left"
+          >
+            <IconButton
+              aria-label="clear"
+              size="small"
+              onClick={() => setRecords([])}
+              color="error"
+            >
+              <DeleteOutline />
+            </IconButton>
+          </Tooltip>
+        </Box>
       }
     >
       <Table>
         <TableHead>
           <TableRow>
-            <TableCell />
-            <TableCell>URL</TableCell>
-            <TableCell>状态</TableCell>
-            <TableCell>开始时间</TableCell>
-            <TableCell>结束时间</TableCell>
+            {
+              headers.map((cell, index) => {
+                return React.cloneElement(cell, { key: index });
+              })
+            }
           </TableRow>
         </TableHead>
         <TableBody>
           {
-            records.map((record, index) => {
+            records.map((record) => {
               return (
-                <Row key={index} record={record} />
+                <Row
+                  key={record.id}
+                  record={record}
+                  column={headers.length}
+                />
               );
             })
+          }
+          {
+            !records.length && (
+              <TableRow>
+                <TableCell colSpan={headers.length}>
+                  <Box
+                    sx={{
+                      display: 'flex',
+                      flexDirection: 'column',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                    }}
+                  >
+                    <FolderOpen fontSize="large" />
+                    <Typography>No Data</Typography>
+                  </Box>
+                </TableCell>
+              </TableRow>
+            )
           }
         </TableBody>
       </Table>

@@ -5,6 +5,7 @@ import {
   MESSAGE_REPLY_SUFFIX,
   randomStr,
   getCurrentTab,
+  getInterceptors,
 } from '@/utils';
 import type { BridgeMessage } from '@/utils';
 
@@ -36,10 +37,20 @@ chrome.runtime.onConnect.addListener((port) => {
   }
 });
 
+chrome.tabs.onActivated.addListener(async (tab) => {
+  const tabId = tab.tabId;
+  const windowId = tab.windowId;
+  chrome.tabs.sendMessage(tabId, buildMessage({
+    type: 'interceptors-reload',
+    key: randomStr('interceptors-reload'),
+    data: sidePanels.has(windowId) ? await getInterceptors() : [],
+  }));
+});
+
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 
   const tab = sender.tab;
-  
+
   if (tab && isBridgeMessage(message)) {
     const tabId = tab.id;
     const windowId = tab.windowId;

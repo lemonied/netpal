@@ -57,6 +57,7 @@ async function determineBodyType(instance: Request | Response) {
     'text/javascript',
     'text/css',
     'application/xml',
+    'application/x-javascript',
   ].some(value => contentType?.includes(value))) {
     try {
       const value = await instance.clone().text();
@@ -81,7 +82,7 @@ async function determineBodyType(instance: Request | Response) {
     } catch {
       // not json
     }
-  }  
+  }
 
   return {
     type: 'unknown',

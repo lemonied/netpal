@@ -11,6 +11,11 @@ const theme = createTheme({
       },
     },
   },
+  typography: {
+    body1: {
+      fontSize: 14,
+    },
+  },
 });
 
 function App() {
