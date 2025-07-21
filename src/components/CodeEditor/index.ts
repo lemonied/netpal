@@ -1,5 +1,4 @@
 import Editor, { loader } from '@monaco-editor/react';
-import { IS_CHROME_EXTENSION } from '@/utils';
 
 loader.config({
   'vs/nls': {
@@ -12,13 +11,11 @@ loader.config({
   },
 });
 
-if (IS_CHROME_EXTENSION) {
-  self.MonacoEnvironment = {
-    getWorkerUrl: function () {
-      return chrome.runtime.getURL('monaco-editor/vs/base/worker/workerMain.js');
-    },
-  };
-}
+self.MonacoEnvironment = {
+  getWorkerUrl: function () {
+    return chrome.runtime.getURL('monaco-editor/vs/base/worker/workerMain.js');
+  },
+};
 
 export default Editor;
 

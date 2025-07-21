@@ -8,8 +8,7 @@ import {
   useSensor,
 } from '@dnd-kit/core';
 import React from 'react';
-import { emitMessageFromPage, messageListenerForPage, sendMessageFromPage } from '@/utils';
-import { useWindowFocus } from '@/hooks';
+import { emitMessageFromPage, handleSidePanelState } from '@/utils';
 import { positionFormat } from './util';
 
 const Wrapper = styled(Fab)`
@@ -98,16 +97,10 @@ const FloatingAction = () => {
   }, []);
 
   React.useEffect(() => {
-    return messageListenerForPage('panel-status', (data) => {
+    return handleSidePanelState((data) => {
       setSidePanelOpen(data);
     });
   }, []);
-
-  useWindowFocus(() => {
-    sendMessageFromPage('get-panel-status').then(data => {
-      setSidePanelOpen(data);
-    });
-  }, { immediate: true });
 
   if (sidePanelOpen) {
     return null;

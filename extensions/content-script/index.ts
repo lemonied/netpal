@@ -1,6 +1,10 @@
 import {
+  getInterceptors,
   isBridgeMessage,
+  isMatchType,
+  MESSAGE_REPLY_SUFFIX,
   NETPAL_EVENT_NAME,
+  NETPAL_RUNTIME_EVENT_NAME,
 } from '@/utils';
 import type { BridgeMessage } from '@/utils';
 
@@ -36,18 +40,34 @@ const isTop = window === window.top;
    * message transfer
    */
   window.addEventListener(NETPAL_EVENT_NAME, ((e) => {
-    const data = (e as CustomEvent).detail;
-    if (isBridgeMessage(data) && data.source !== 'service') {
-      chrome.runtime.sendMessage(data).then((res: BridgeMessage) => {
-        window.dispatchEvent(new CustomEvent(NETPAL_EVENT_NAME, {
-          detail: res,
-        }));
-      });
+    const message = (e as CustomEvent).detail;
+    if (isBridgeMessage(message)) {
+      switch (true) {
+        case isMatchType(message, 'get-interceptors'): {
+          (async () => {
+            window.dispatchEvent(new CustomEvent(NETPAL_RUNTIME_EVENT_NAME, {
+              detail: {
+                ...message,
+                data: await getInterceptors(),
+                type: `${message.type}${MESSAGE_REPLY_SUFFIX}`,
+              },
+            }));
+          })();
+          break;
+        }
+        default: {
+          chrome.runtime.sendMessage(message).then((res: BridgeMessage) => {
+            window.dispatchEvent(new CustomEvent(NETPAL_RUNTIME_EVENT_NAME, {
+              detail: res,
+            }));
+          });
+        }
+      }
     }
   }));
   chrome.runtime.onMessage.addListener((message) => {
     if (isBridgeMessage(message)) {
-      window.dispatchEvent(new CustomEvent(NETPAL_EVENT_NAME, {
+      window.dispatchEvent(new CustomEvent(NETPAL_RUNTIME_EVENT_NAME, {
         detail: message,
       }));
     }

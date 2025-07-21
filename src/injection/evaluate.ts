@@ -1,4 +1,8 @@
-import { emitMessageFromPage, messageListenerForPage, sendMessageFromPage } from '@/utils';
+import {
+  emitMessageFromPage,
+  sendMessageFromPage,
+  handleInterceptorsChange,
+} from '@/utils';
 import type { Middleware } from '@/utils';
 import { RequestContext } from './interceptor';
 import type { ResponseContext } from './interceptor';
@@ -56,10 +60,10 @@ const frameURL = ${JSON.stringify(window.location.href)};
 
 let uninstall: (() => void)[] = [];
 
-function reload(interceptors: any[]) {
+function reload(interceptors?: any[]) {
   uninstall.forEach(fn => fn());
   uninstall = [];
-  interceptors.forEach(item => {
+  interceptors?.forEach(item => {
 
     /** cancel token */
     let resolved: (() => void) | undefined = undefined;
@@ -140,11 +144,7 @@ window.netpalInterceptors.request.push(async (_, next) => {
   await next();
 });
 
-sendMessageFromPage('get-interceptors').then(data => {
+handleInterceptorsChange((data) => {
   reload(data);
   resolved();
-});
-
-messageListenerForPage('interceptors-reload', (data) => {
-  reload(data);
 });

@@ -12,11 +12,11 @@ import {
   TableRow,
   Typography,
 } from '@mui/material';
-import { usePortMessageListener } from './sidePanelPort';
 import type { RequestRecord, ResponseRecord } from './util';
 import { KeyboardArrowDown, KeyboardArrowUp } from '@mui/icons-material';
 import { DiffEditor } from '@/components/CodeEditor';
 import Collapse from '@/components/Collapse';
+import { useRuntimeMessageListener } from '@/hooks';
 
 function safeParse(str?: string) {
   try {
@@ -165,7 +165,7 @@ const Records = () => {
 
   const control = Form.useControlInstance();
 
-  usePortMessageListener<RequestRecord | ResponseRecord>('intercept-records', (data) => {
+  useRuntimeMessageListener<RequestRecord | ResponseRecord>('intercept-records', (data) => {
     if (data.key === control?.getValue()?.key) {
       setRecords(pre => {
         const index = pre.findIndex(v => v.id === data.id);

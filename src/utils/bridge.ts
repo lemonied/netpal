@@ -4,10 +4,11 @@ export const MESSAGE_REPLY_SUFFIX = '-reply';
 
 export const NETPAL_EVENT_NAME = 'NetpalEvent';
 
+export const NETPAL_RUNTIME_EVENT_NAME = 'NetpalRuntimeEvent';
+
 export interface BridgeMessage<T = any> {
   type: string;
   key: string;
-  source?: 'service';
   data?: T;
   error?: string;
 }

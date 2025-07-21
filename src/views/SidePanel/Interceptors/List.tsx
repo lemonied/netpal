@@ -4,18 +4,22 @@ import Item from './Item';
 import { Box, Button, Chip, Stack, Typography } from '@mui/material';
 import { DEFAULT_REQUEST_INTERCEPTOR, DEFAULT_RESPONSE_INTERCEPTOR } from './util';
 import { debounce } from 'lodash';
-import { buildMessage, getInterceptors, randomStr, saveInterceptor } from '@/utils';
+import { buildMessage, getCurrentTab, getInterceptors, randomStr, saveInterceptor } from '@/utils';
 import { Add } from '@mui/icons-material';
 import { createConfirm } from '@/components/Dialog';
-import { getSidePanelPort } from './sidePanelPort';
 
 const debounceSave = debounce(async (value: any) => {
   await saveInterceptor(value);
-  getSidePanelPort()?.postMessage(buildMessage({
-    type: 'interceptors-reload',
-    key: randomStr('interceptors-reload'),
-    data: await getInterceptors(),
-  }));
+  const tab = await getCurrentTab();
+  const tabId = tab.id;
+  if (typeof tabId === 'number') {
+    chrome.tabs.sendMessage(tabId, buildMessage({
+      type: 'interceptors-reload',
+      key: randomStr('interceptors-reload'),
+      data: await getInterceptors(),
+    }));
+  }
+  
 }, 200);
 
 const generateDefaultItem = () => {

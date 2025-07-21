@@ -1,22 +1,18 @@
-import { isBridgeMessage, isMatchType, MESSAGE_REPLY_SUFFIX } from '@/utils';
-
 window.addEventListener('message', async (e) => {
   const message = e.data;
-  if (isBridgeMessage(message) && isMatchType(message, 'evaluate-script')) {
-    try {
-      const result = window.eval(message.data);
-      window.parent.postMessage({
-        ...message,
-        type: `${message.type}${MESSAGE_REPLY_SUFFIX}`,
-        data: await result,
-      }, '*');
-    } catch (e: any) {
-      window.parent.postMessage({
-        ...message,
-        type: `${message.type}${MESSAGE_REPLY_SUFFIX}`,
-        error: e?.message,
-        data: undefined,
-      }, '*');
-    }
+  const key = message.key;
+  const script = message.script;
+  try {
+    const result = window.eval(script);
+    window.parent.postMessage({
+      key,
+      data: await result,
+    }, '*');
+  } catch (e: any) {
+    window.parent.postMessage({
+      key,
+      error: e?.message,
+      data: undefined,
+    }, '*');
   }
 });
