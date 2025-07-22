@@ -1,8 +1,9 @@
 name: Build and Upload Release Asset
 
 on:
-  release:
-    types: [created]
+  push:
+    tags:
+      - "v*.*.*"
 
 jobs:
   build-and-upload:
@@ -29,9 +30,8 @@ jobs:
       - name: Zip dist folder with version
         run: zip -r "netpal-${VERSION}.zip" dist
 
+      # https://github.com/softprops/action-gh-release
       - name: Upload netpal.zip to Release
         uses: softprops/action-gh-release@v2
         with:
           files: netpal-${{ env.VERSION }}.zip
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
