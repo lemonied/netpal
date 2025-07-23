@@ -65,10 +65,6 @@ function init() {
 }
 
 (() => {
-
   inject();
   init();
-  // eslint-disable-next-line no-console
-  console.log('netpal is enabled');
-
 })();
