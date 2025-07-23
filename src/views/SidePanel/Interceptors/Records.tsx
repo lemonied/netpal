@@ -90,6 +90,7 @@ const Row = (props: RowProps) => {
             }}
           >{record.request?.after.url}</Typography>
         </TableCell>
+        <TableCell>{record.request?.initiator}</TableCell>
         <TableCell>
           {
             record.response ?
@@ -152,6 +153,7 @@ const Records = () => {
   const headers = [
     <TableCell />,
     <TableCell>URL</TableCell>,
+    <TableCell>类型</TableCell>,
     <TableCell>状态</TableCell>,
     <TableCell>开始时间</TableCell>,
     <TableCell>结束时间</TableCell>,

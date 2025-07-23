@@ -21,6 +21,7 @@ export interface SimpleResponseContext {
 interface SharedRecord {
   id: string;
   key: string;
+  initiator: 'xhr' | 'fetch';
 }
 
 export interface RequestRecord extends SharedRecord {

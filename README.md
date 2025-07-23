@@ -18,6 +18,9 @@ npm run dev:content
 # service-worker
 npm run dev:service
 
+# injection.js
+npm run dev:injection
+
 # side panel
 npm run dev
 ```

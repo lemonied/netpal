@@ -89,6 +89,7 @@ function reload(interceptors?: any[]) {
               ...toSimple(ctx),
               timestamp: Date.now(),
             } as SimpleRequestContext,
+            initiator: ctx.type,
           } satisfies RequestRecord);
         }
       }
@@ -120,6 +121,7 @@ function reload(interceptors?: any[]) {
               ...toSimple(ctx),
               timestamp: Date.now(),
             } as SimpleResponseContext,
+            initiator: ctx.request.type,
           } satisfies ResponseRecord);
         }
       }

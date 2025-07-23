@@ -8,20 +8,12 @@ import {
 } from '@/utils';
 import type { BridgeMessage } from '@/utils';
 
-const isTop = window === window.top;
-
-(() => {
-
+function inject() {
+  const isTop = window === window.top;
   const injection = document.createElement('script');
-  injection.type = 'module';
   injection.src = chrome.runtime.getURL('injection.js');
-  injection.async = false;
   const head = document.head || document.documentElement;
-  if (head.firstChild) {
-    head.insertBefore(injection, head.firstChild);
-  } else {
-    head.appendChild(injection);
-  }
+  head.insertBefore(injection, head.firstChild);
 
   if (isTop) {
     window.addEventListener('load', () => {
@@ -31,11 +23,9 @@ const isTop = window === window.top;
       head.appendChild(panelTrigger);
     });
   }
+}
 
-})();
-
-(() => {
-
+function init() {
   /**
    * message transfer
    */
@@ -72,4 +62,13 @@ const isTop = window === window.top;
       }));
     }
   });
+}
+
+(() => {
+
+  inject();
+  init();
+  // eslint-disable-next-line no-console
+  console.log('netpal is enabled');
+
 })();

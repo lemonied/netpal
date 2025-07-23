@@ -6,25 +6,20 @@ import sharedConfig from './vite.config.shared';
 export default defineConfig(() => {
 
   return mergeConfig<UserConfig, UserConfig>(sharedConfig, {
-    base: '/',
+    publicDir: false,
     build: {
       rollupOptions: {
         input: {
-          index: 'index.html',
-          sandbox: 'extensions/sandbox/index.html',
-          'panel-trigger': 'extensions/panel-trigger/main.tsx',
+          injection: 'src/injection/index.ts',
         },
         output: [
           {
             entryFileNames: '[name].js',
             dir: 'dist',
-            format: 'es',
+            format: 'umd',
           },
         ],
       },
-    },
-    server: {
-      host: '0.0.0.0',
     },
   });
 
