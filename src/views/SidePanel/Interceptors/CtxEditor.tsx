@@ -1,7 +1,5 @@
-import React from 'react';
-import CodeEditor, { loader } from '@/components/CodeEditor';
+import CodeEditor, { EditorContainer, loader } from '@/components/CodeEditor';
 import type { EditorProps } from '@/components/CodeEditor';
-import type { editor } from 'monaco-editor';
 
 loader.init().then(monaco => {
   monaco.languages.typescript.javascriptDefaults.addExtraLib(`
@@ -13,6 +11,7 @@ interface RequestContext {
   headers: Record<string, string>;
   body?: string;
 }
+function RequestInterceptor(ctx: RequestContext): Promise<RequestContext>;
 
 interface ResponseContext {
   readonly headers: Record<string, string>;
@@ -20,23 +19,17 @@ interface ResponseContext {
   readonly status: number;
   readonly request: SimpleRequestContext;
 }
+function ResponseInterceptor(ctx: ResponseContext): Promise<ResponseContext>;
 `);
 });
 
-const ContextEditor = (props: EditorProps) => {
-
-  const editorRef = React.useRef<editor.IStandaloneCodeEditor>(null);
+const CtxEditor = (props: EditorProps) => {
 
   return (
-    <div
-      style={{ height: 200 }}
-    >
+    <EditorContainer min={100}>
       <CodeEditor
         {...props}
         language="javascript"
-        onMount={(editor) => {
-          editorRef.current = editor;
-        }}
         options={{
           tabSize: 2,
           minimap: {
@@ -44,11 +37,13 @@ const ContextEditor = (props: EditorProps) => {
           },
           scrollbar: {
             arrowSize: 3,
+            vertical: 'hidden',
+            alwaysConsumeMouseWheel: false,
           },
         }}
       />
-    </div>
+    </EditorContainer>
   );
 };
 
-export { ContextEditor };
+export { CtxEditor };

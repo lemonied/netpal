@@ -41,20 +41,14 @@ export interface SimpleResponseInterceptor {
 }
 
 export const DEFAULT_REQUEST_INTERCEPTOR = `
-/**
- * @param {RequestContext} ctx
- * @returns {Promise<RequestContext>}
- */
+/** @type {RequestInterceptor} */
 async function requestInterceptor(ctx) {
   return ctx;
 };
 `.trim();
 
 export const DEFAULT_RESPONSE_INTERCEPTOR = `
-/**
- * @param {ResponseContext} ctx
- * @returns {Promise<ResponseContext>}
- */
+/** @type {ResponseInterceptor} */
 async function responseInterceptor(ctx) {
   return ctx;
 };

@@ -11,12 +11,15 @@ import {
   TableRow,
   Typography,
   Tooltip,
+  TableContainer,
+  Paper,
 } from '@mui/material';
 import type { RequestRecord, ResponseRecord } from './util';
 import { DeleteOutline, FolderOpen, KeyboardArrowDown, KeyboardArrowUp } from '@mui/icons-material';
-import { DiffEditor } from '@/components/CodeEditor';
+import { EditorContainer, DiffEditor } from '@/components/CodeEditor';
 import Collapse from '@/components/Collapse';
-import { useRuntimeMessageListener } from '@/hooks';
+import { useRecords } from './Context';
+import { FocusBorder } from '@/components/FocusBorder';
 
 function safeParse(str?: string) {
   try {
@@ -120,22 +123,30 @@ const Row = (props: RowProps) => {
               sx={{ margin: 1 }}
             >
               <Typography variant="h6" gutterBottom component="div">Diff</Typography>
-              <DiffEditor
-                original={diff.original}
-                modified={diff.modified}
-                language="json"
-                options={{
-                  readOnly: true,
-                  renderSideBySide: true,
-                  minimap: {
-                    enabled: false,
-                  },
-                  scrollbar: {
-                    arrowSize: 3,
-                  },
+              <FocusBorder
+                style={{
+                  padding: '10px 6px',
                 }}
-                height={500}
-              />
+              >
+                <EditorContainer max={600}>
+                  <DiffEditor
+                    original={diff.original}
+                    modified={diff.modified}
+                    language="json"
+                    options={{
+                      readOnly: true,
+                      renderSideBySide: true,
+                      minimap: {
+                        enabled: false,
+                      },
+                      scrollbar: {
+                        arrowSize: 3,
+                        alwaysConsumeMouseWheel: false,
+                      },
+                    }}
+                  />
+                </EditorContainer>
+              </FocusBorder>
             </Box>
           </MCollapse>
         </TableCell>
@@ -146,9 +157,8 @@ const Row = (props: RowProps) => {
 
 const Records = () => {
 
-  const [records, setRecords] = React.useState<RecordState[]>([]);
-
-  const control = Form.useControlInstance();
+  const key = Form.useWatch(['key']);
+  const { records, clear } = useRecords(key);
 
   const headers = [
     <TableCell />,
@@ -158,33 +168,6 @@ const Records = () => {
     <TableCell>开始时间</TableCell>,
     <TableCell>结束时间</TableCell>,
   ];
-
-  useRuntimeMessageListener<RequestRecord | ResponseRecord>('intercept-records', (data) => {
-    if (data.key === control?.getValue()?.key) {
-      setRecords(pre => {
-        const index = pre.findIndex(v => v.id === data.id);
-        if (index > -1) {
-          const item = pre[index];
-          const ret = pre.slice();
-          ret.splice(index, 1, {
-            ...item,
-            [data.type]: data,
-          });
-          return ret;
-        }
-        if (data.type === 'request') {
-          return [
-            {
-              id: data.id,
-              [data.type]: data,
-            },
-            ...pre,
-          ];
-        }
-        return pre;
-      });
-    }
-  });
 
   return (
     <Collapse
@@ -206,7 +189,7 @@ const Records = () => {
             <IconButton
               aria-label="clear"
               size="small"
-              onClick={() => setRecords([])}
+              onClick={() => clear()}
               color="error"
             >
               <DeleteOutline />
@@ -215,49 +198,59 @@ const Records = () => {
         </Box>
       }
     >
-      <Table>
-        <TableHead>
-          <TableRow>
+      <TableContainer
+        component={Paper}
+        sx={{
+          maxHeight: '100vh',
+        }}
+      >
+        <Table
+          size="small"
+          stickyHeader
+        >
+          <TableHead>
+            <TableRow>
+              {
+                headers.map((cell, index) => {
+                  return React.cloneElement(cell, { key: index });
+                })
+              }
+            </TableRow>
+          </TableHead>
+          <TableBody>
             {
-              headers.map((cell, index) => {
-                return React.cloneElement(cell, { key: index });
+              records.map((record) => {
+                return (
+                  <Row
+                    key={record.id}
+                    record={record}
+                    column={headers.length}
+                  />
+                );
               })
             }
-          </TableRow>
-        </TableHead>
-        <TableBody>
-          {
-            records.map((record) => {
-              return (
-                <Row
-                  key={record.id}
-                  record={record}
-                  column={headers.length}
-                />
-              );
-            })
-          }
-          {
-            !records.length && (
-              <TableRow>
-                <TableCell colSpan={headers.length}>
-                  <Box
-                    sx={{
-                      display: 'flex',
-                      flexDirection: 'column',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                    }}
-                  >
-                    <FolderOpen fontSize="large" />
-                    <Typography>No Data</Typography>
-                  </Box>
-                </TableCell>
-              </TableRow>
-            )
-          }
-        </TableBody>
-      </Table>
+            {
+              !records.length && (
+                <TableRow>
+                  <TableCell colSpan={headers.length}>
+                    <Box
+                      sx={{
+                        display: 'flex',
+                        flexDirection: 'column',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                      }}
+                    >
+                      <FolderOpen fontSize="large" />
+                      <Typography>No Data</Typography>
+                    </Box>
+                  </TableCell>
+                </TableRow>
+              )
+            }
+          </TableBody>
+        </Table>
+      </TableContainer>
     </Collapse>
   );
 };

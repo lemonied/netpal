@@ -1,12 +1,16 @@
 import React from 'react';
 import Form from 'form-pilot';
 import Item from './Item';
-import { Box, Button, Chip, Stack, Typography } from '@mui/material';
+import { Box, Chip, IconButton, Stack, Tooltip, Typography } from '@mui/material';
 import { DEFAULT_REQUEST_INTERCEPTOR, DEFAULT_RESPONSE_INTERCEPTOR } from './util';
+import type { RequestRecord, ResponseRecord } from './util';
 import { debounce } from 'lodash';
 import { buildMessage, getCurrentTab, getInterceptors, randomStr, saveInterceptor } from '@/utils';
 import { Add } from '@mui/icons-material';
 import { createConfirm } from '@/components/Dialog';
+import { useRuntimeMessageListener } from '@/hooks';
+import type { RecordState } from './Context';
+import { RecordsContext } from './Context';
 
 const debounceSave = debounce(async (value: any) => {
   await saveInterceptor(value);
@@ -19,7 +23,7 @@ const debounceSave = debounce(async (value: any) => {
       data: await getInterceptors(),
     }));
   }
-  
+
 }, 200);
 
 const generateDefaultItem = () => {
@@ -36,6 +40,7 @@ const Interceptors = () => {
 
   const [tab, setTab] = React.useState(0);
   const control = Form.useControl();
+  const [records, setRecords] = React.useState<RecordState[]>([]);
 
   Form.useOnValueChange(({ newValue }) => {
     const list: any[] = newValue?.list || [];
@@ -50,8 +55,33 @@ const Interceptors = () => {
     });
   }, [control]);
 
+  useRuntimeMessageListener<RequestRecord | ResponseRecord>('intercept-records', (data) => {
+    setRecords(pre => {
+      const index = pre.findIndex(v => v.id === data.id);
+      if (index > -1) {
+        const item = pre[index];
+        const ret = pre.slice();
+        ret.splice(index, 1, {
+          ...item,
+          [data.type]: data,
+        });
+        return ret;
+      }
+      if (data.type === 'request') {
+        return [
+          {
+            id: data.id,
+            [data.type]: data,
+          },
+          ...pre,
+        ];
+      }
+      return pre;
+    });
+  });
+
   return (
-    <>
+    <RecordsContext.Provider value={{ records, setRecords }}>
       <Form
         control={control}
       >
@@ -72,6 +102,7 @@ const Interceptors = () => {
                       display: 'flex',
                       gap: 1,
                       alignItems: 'center',
+                      flexWrap: 'wrap',
                     }}
                   >
                     {
@@ -133,14 +164,18 @@ const Interceptors = () => {
                         );
                       })
                     }
-                    <Button
-                      variant="outlined"
-                      size="small"
-                      startIcon={
+                    <Tooltip
+                      title="新增拦截器"
+                      placement="top"
+                      arrow
+                    >
+                      <IconButton
+                        onClick={() => control.add(generateDefaultItem())}
+                        color="primary"
+                      >
                         <Add />
-                      }
-                      onClick={() => control.add(generateDefaultItem())}
-                    >新增拦截器</Button>
+                      </IconButton>
+                    </Tooltip>
                   </Box>
                   {
                     (() => {
@@ -163,7 +198,7 @@ const Interceptors = () => {
           }
         </Form.List>
       </Form>
-    </>
+    </RecordsContext.Provider>
   );
 };
 

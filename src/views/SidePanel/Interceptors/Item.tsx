@@ -2,7 +2,7 @@ import Form from 'form-pilot';
 import { FocusBorder } from '@/components/FocusBorder';
 import Collapse from '@/components/Collapse';
 import { Box, Stack, Switch, TextField, Typography } from '@mui/material';
-import { ContextEditor } from './ContextEditor';
+import { CtxEditor } from './CtxEditor';
 import { Records } from './Records';
 
 const Item = () => {
@@ -69,7 +69,7 @@ const Item = () => {
             <Form.Item
               name="request"
             >
-              <ContextEditor />
+              <CtxEditor />
             </Form.Item>
           </FocusBorder>
         </Collapse>
@@ -86,7 +86,7 @@ const Item = () => {
             <Form.Item
               name="response"
             >
-              <ContextEditor />
+              <CtxEditor />
             </Form.Item>
           </FocusBorder>
         </Collapse>

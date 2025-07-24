@@ -20,3 +20,5 @@ self.MonacoEnvironment = {
 export default Editor;
 
 export * from '@monaco-editor/react';
+
+export * from './AutoHeight';
