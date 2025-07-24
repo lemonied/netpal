@@ -26,7 +26,7 @@ function ResponseInterceptor(ctx: ResponseContext): Promise<ResponseContext>;
 const CtxEditor = (props: EditorProps) => {
 
   return (
-    <EditorContainer min={100}>
+    <EditorContainer min={50}>
       <CodeEditor
         {...props}
         language="javascript"

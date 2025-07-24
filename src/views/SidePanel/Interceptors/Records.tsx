@@ -133,6 +133,8 @@ const Row = (props: RowProps) => {
                     original={diff.original}
                     modified={diff.modified}
                     language="json"
+                    keepCurrentModifiedModel
+                    keepCurrentOriginalModel
                     options={{
                       readOnly: true,
                       renderSideBySide: true,

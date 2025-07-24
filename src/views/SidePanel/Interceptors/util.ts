@@ -40,6 +40,13 @@ export interface SimpleResponseInterceptor {
   (ctx: SimpleResponseContext): Promise<SimpleResponseContext>;
 }
 
+export interface DebugRecord {
+  key: string;
+  id: string;
+  request?: SimpleRequestContext;
+  response?: SimpleResponseContext;
+}
+
 export const DEFAULT_REQUEST_INTERCEPTOR = `
 /** @type {RequestInterceptor} */
 async function requestInterceptor(ctx) {
