@@ -28,7 +28,7 @@ jobs:
         run: echo "VERSION=$(node -p "require('./public/manifest.json').version")" >> $GITHUB_ENV
 
       - name: Zip dist folder with version
-        run: zip -r "netpal-${VERSION}.zip" dist
+        run: cd dist && zip -r "../netpal-${VERSION}.zip" . && cd -
 
       # https://github.com/softprops/action-gh-release
       - name: Upload netpal.zip to Release
