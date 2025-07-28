@@ -1,5 +1,7 @@
 
 export interface SimpleRequestContext {
+  readonly type: 'request';
+  readonly initiator: 'xhr' | 'fetch';
   readonly timestamp: number;
   url: string;
   headers: Record<string, string>;
@@ -11,6 +13,7 @@ export interface SimpleRequestInterceptor {
 }
 
 export interface SimpleResponseContext {
+  readonly type: 'response';
   readonly timestamp: number;
   readonly headers: Record<string, string>;
   body?: string;
@@ -21,7 +24,6 @@ export interface SimpleResponseContext {
 interface SharedRecord {
   id: string;
   key: string;
-  initiator: 'xhr' | 'fetch';
 }
 
 export interface RequestRecord extends SharedRecord {

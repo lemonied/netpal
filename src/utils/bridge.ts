@@ -13,11 +13,11 @@ export interface BridgeMessage<T = any> {
   error?: string;
 }
 
-export function buildMessage<T = any>(message: BridgeMessage<T>) {
+export function buildMessage<T = any>(message: BridgeMessage<T>): BridgeMessage<T> {
   return {
     ...message,
     type: `${MESSAGE_TYPE_PREFIX}${message.type}`,
-  } satisfies BridgeMessage<T>;
+  };
 }
 
 export function isBridgeMessage(val: unknown): val is BridgeMessage {

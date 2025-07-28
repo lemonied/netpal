@@ -1,8 +1,9 @@
 import React from 'react';
 import Interceptors from './Interceptors';
+import type { SimpleRequestContext, SimpleResponseContext } from './Interceptors';
 import { Box, Tab, Tabs, Grid, styled } from '@mui/material';
 import Form from 'form-pilot';
-import { randomStr } from '@/utils';
+import { buildMessage, isBridgeMessage, isMatchType, MESSAGE_REPLY_SUFFIX, randomStr } from '@/utils';
 import { useRuntimeMessageListener } from '@/hooks';
 
 const iframeSrc = chrome.runtime.getURL('extensions/sandbox/index.html');
@@ -32,18 +33,51 @@ const SidePanel = () => {
     const key = randomStr('eval');
     const listener = (e: MessageEvent) => {
       const message = e.data;
-      if (message.key === key) {
+      if (isBridgeMessage(message) && message.key === key) {
         sendResponse(message.data, message.error);
         window.removeEventListener('message', listener);
       }
     };
     window.addEventListener('message', listener);
-    iframeRef.current?.contentWindow?.postMessage({
-      key,
-      script: message,
-    }, '*');
+    iframeRef.current?.contentWindow?.postMessage(
+      buildMessage({
+        type: 'evaluate-script',
+        key,
+        data: message,
+      }),
+      '*',
+    );
     return true;
   });
+
+  React.useEffect(() => {
+    const listener = async (e: MessageEvent) => {
+      const message = e.data;
+      if (isBridgeMessage(message) && isMatchType(message, 'debug')) {
+        await new Promise((resolve) => {
+          window.setTimeout(resolve, 100);
+        });
+        const data: SimpleRequestContext | SimpleResponseContext = message.data;
+        // TODO
+        if (data.type === 'request') {
+          (data as SimpleRequestContext).headers['x-debug'] = 'true';
+        }
+        iframeRef.current?.contentWindow?.postMessage(
+          buildMessage({
+            ...message,
+            type: `${message.type}${MESSAGE_REPLY_SUFFIX}`,
+            data,
+          }),
+          '*',
+        );
+      }
+    };
+    window.addEventListener('message', listener);
+
+    return () => {
+      window.removeEventListener('message', listener);
+    };
+  }, []);
 
   return (
     <>
@@ -82,23 +116,19 @@ const SidePanel = () => {
           </Form.Update>
         </Box>
       </RootWrapper>
-      {
-        iframeSrc && (
-          <iframe
-            ref={iframeRef}
-            src={iframeSrc}
-            style={{
-              width: 0,
-              height: 0,
-              opacity: 0,
-              position: 'fixed',
-              top: 0,
-              left: 0,
-              overflow: 'hidden',
-            }}
-          />
-        )
-      }
+      <iframe
+        ref={iframeRef}
+        src={iframeSrc}
+        style={{
+          width: 0,
+          height: 0,
+          opacity: 0,
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          overflow: 'hidden',
+        }}
+      />
     </>
   );
 

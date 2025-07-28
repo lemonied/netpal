@@ -20,6 +20,8 @@ interface ResponseContext {
   readonly request: SimpleRequestContext;
 }
 function ResponseInterceptor(ctx: ResponseContext): Promise<ResponseContext>;
+
+declare function debug(ctx: RequestContext | ResponseContext): Promise<void>;
 `);
 });
 

@@ -22,6 +22,8 @@ function transformHeaders(headers: Headers) {
 
 function toSimpleRequest(ctx: RequestContext): SimpleRequestContext {
   return {
+    type: 'request',
+    initiator: ctx.type,
     url: new URL(ctx.url, window.location.href).href,
     headers: transformHeaders(ctx.headers),
     body: typeof ctx.body === 'string' ? ctx.body : undefined,
@@ -35,6 +37,7 @@ function toSimple(ctx: RequestContext | ResponseContext): SimpleRequestContext |
     return toSimpleRequest(ctx);
   }
   return {
+    type: 'response',
     headers: transformHeaders(ctx.headers),
     status: ctx.status,
     body: typeof ctx.body === 'string' ? ctx.body : undefined,
@@ -48,7 +51,7 @@ async function evaluateScript<T = any>(item: Record<string, string>, simpleCtx: 
   const code = isRequest ? item.request : item.response;
   return await sendMessageFromPage('evaluate-script', `
 const frameURL = ${JSON.stringify(window.location.href)};
-(async (ctx) => {
+return (async (ctx) => {
   if (new RegExp(${JSON.stringify(item.regex)}).test(${isRequest ? 'ctx.url' : 'ctx.request.url'})) {
     const fn = ${code};
     return fn(ctx);
@@ -89,7 +92,6 @@ function reload(interceptors?: any[]) {
               ...toSimple(ctx),
               timestamp: Date.now(),
             } as SimpleRequestContext,
-            initiator: ctx.type,
           } satisfies RequestRecord);
         }
       }
@@ -121,7 +123,6 @@ function reload(interceptors?: any[]) {
               ...toSimple(ctx),
               timestamp: Date.now(),
             } as SimpleResponseContext,
-            initiator: ctx.request.type,
           } satisfies ResponseRecord);
         }
       }

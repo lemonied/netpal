@@ -93,7 +93,7 @@ const Row = (props: RowProps) => {
             }}
           >{record.request?.after.url}</Typography>
         </TableCell>
-        <TableCell>{record.request?.initiator}</TableCell>
+        <TableCell>{record.request?.before?.initiator}</TableCell>
         <TableCell>
           {
             record.response ?
