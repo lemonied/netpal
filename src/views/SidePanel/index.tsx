@@ -1,10 +1,11 @@
 import React from 'react';
 import Interceptors from './Interceptors';
-import type { SimpleRequestContext, SimpleResponseContext } from './Interceptors';
 import { Box, Tab, Tabs, Grid, styled } from '@mui/material';
 import Form from 'form-pilot';
-import { buildMessage, isBridgeMessage, isMatchType, MESSAGE_REPLY_SUFFIX, randomStr } from '@/utils';
+import { buildMessage, isBridgeMessage, randomStr } from '@/utils';
 import { useRuntimeMessageListener } from '@/hooks';
+import { Debug } from './Interceptors/Debug';
+import { ConfigProvider } from './Interceptors/Context';
 
 const iframeSrc = chrome.runtime.getURL('extensions/sandbox/index.html');
 
@@ -18,9 +19,14 @@ async function initSidePanelPort() {
 }
 initSidePanelPort();
 
-const RootWrapper = styled(Box)`
-  min-width: 500px;
-  overflow: auto;
+const Iframe = styled('iframe')`
+  width: 0;
+  height: 0;
+  opacity: 0;
+  position: 'fixed';
+  top: 0;
+  left: 0;
+  overflow: 'hidden';
 `;
 
 const SidePanel = () => {
@@ -50,38 +56,14 @@ const SidePanel = () => {
     return true;
   });
 
-  React.useEffect(() => {
-    const listener = async (e: MessageEvent) => {
-      const message = e.data;
-      if (isBridgeMessage(message) && isMatchType(message, 'debug')) {
-        await new Promise((resolve) => {
-          window.setTimeout(resolve, 100);
-        });
-        const data: SimpleRequestContext | SimpleResponseContext = message.data;
-        // TODO
-        if (data.type === 'request') {
-          (data as SimpleRequestContext).headers['x-debug'] = 'true';
-        }
-        iframeRef.current?.contentWindow?.postMessage(
-          buildMessage({
-            ...message,
-            type: `${message.type}${MESSAGE_REPLY_SUFFIX}`,
-            data,
-          }),
-          '*',
-        );
-      }
-    };
-    window.addEventListener('message', listener);
-
-    return () => {
-      window.removeEventListener('message', listener);
-    };
-  }, []);
-
   return (
-    <>
-      <RootWrapper>
+    <ConfigProvider>
+      <Box
+        sx={{
+          minWidth: 500,
+          overflow: 'auto',
+        }}
+      >
         <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
           <Grid
             container
@@ -115,21 +97,10 @@ const SidePanel = () => {
             }
           </Form.Update>
         </Box>
-      </RootWrapper>
-      <iframe
-        ref={iframeRef}
-        src={iframeSrc}
-        style={{
-          width: 0,
-          height: 0,
-          opacity: 0,
-          position: 'fixed',
-          top: 0,
-          left: 0,
-          overflow: 'hidden',
-        }}
-      />
-    </>
+      </Box>
+      <Debug sanbox={iframeRef} />
+      <Iframe ref={iframeRef} src={iframeSrc} />
+    </ConfigProvider>
   );
 
 };

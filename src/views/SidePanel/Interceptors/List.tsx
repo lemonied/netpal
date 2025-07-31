@@ -1,7 +1,7 @@
 import React from 'react';
 import Form from 'form-pilot';
 import Item from './Item';
-import { Box, Chip, IconButton, Stack, Tooltip, Typography } from '@mui/material';
+import { Box, Chip, FormControlLabel, IconButton, Stack, Switch, Tooltip, Typography } from '@mui/material';
 import { DEFAULT_REQUEST_INTERCEPTOR, DEFAULT_RESPONSE_INTERCEPTOR } from './util';
 import type { RequestRecord, ResponseRecord } from './util';
 import { debounce } from 'lodash';
@@ -10,7 +10,7 @@ import { Add } from '@mui/icons-material';
 import { createConfirm } from '@/components/Dialog';
 import { useRuntimeMessageListener } from '@/hooks';
 import type { RecordState } from './Context';
-import { RecordsContext } from './Context';
+import { RecordsContext, useConfig } from './Context';
 
 const debounceSave = debounce(async (value: any) => {
   await saveInterceptor(value);
@@ -41,6 +41,8 @@ const Interceptors = () => {
   const [tab, setTab] = React.useState(0);
   const control = Form.useControl();
   const [records, setRecords] = React.useState<RecordState[]>([]);
+
+  const { config, setConfig } = useConfig();
 
   Form.useOnValueChange(({ newValue }) => {
     const list: any[] = newValue?.list || [];
@@ -176,6 +178,22 @@ const Interceptors = () => {
                         <Add />
                       </IconButton>
                     </Tooltip>
+                    <FormControlLabel
+                      control={
+                        <Switch
+                          checked={config.enableDebug}
+                          onChange={e => {
+                            setConfig?.(pre => {
+                              return {
+                                ...pre,
+                                enableDebug: e.target.checked,
+                              };
+                            });
+                          }}
+                        />
+                      }
+                      label={config.enableDebug ? '开启Debug' : '关闭Debug'}
+                    />
                   </Box>
                   {
                     (() => {

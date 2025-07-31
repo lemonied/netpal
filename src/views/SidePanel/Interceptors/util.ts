@@ -62,3 +62,11 @@ async function responseInterceptor(ctx) {
   return ctx;
 };
 `.trim();
+
+export function safeParse(str?: string) {
+  try {
+    return JSON.parse(str!);
+  } catch {
+    return str;
+  }
+}

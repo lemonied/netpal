@@ -15,19 +15,12 @@ import {
   Paper,
 } from '@mui/material';
 import type { RequestRecord, ResponseRecord } from './util';
+import { safeParse } from './util';
 import { DeleteOutline, FolderOpen, KeyboardArrowDown, KeyboardArrowUp } from '@mui/icons-material';
 import { EditorContainer, DiffEditor } from '@/components/CodeEditor';
 import Collapse from '@/components/Collapse';
 import { useRecords } from './Context';
 import { FocusBorder } from '@/components/FocusBorder';
-
-function safeParse(str?: string) {
-  try {
-    return JSON.parse(str!);
-  } catch {
-    return str;
-  }
-}
 
 interface RecordState {
   id: string;
