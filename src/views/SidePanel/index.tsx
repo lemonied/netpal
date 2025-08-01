@@ -24,10 +24,10 @@ const Iframe = styled('iframe')`
   width: 0;
   height: 0;
   opacity: 0;
-  position: 'fixed';
+  position: fixed;
   top: 0;
   left: 0;
-  overflow: 'hidden';
+  overflow: hidden;
 `;
 
 const SidePanel = () => {
