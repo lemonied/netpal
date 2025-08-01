@@ -10,8 +10,8 @@ import {
   Tooltip,
   Typography,
 } from '@mui/material';
-import type { SimpleRequestContext, SimpleResponseContext } from './util';
-import { safeParse } from './util';
+import type { SimpleRequestContext, SimpleResponseContext } from '../utils';
+import { safeParse } from '../utils';
 import { buildMessage, isBridgeMessage, isMatchType, MESSAGE_REPLY_SUFFIX } from '@/utils';
 import type { TransitionProps } from '@mui/material/transitions';
 import Form from 'form-pilot';
@@ -68,6 +68,7 @@ const DebugContent = (props: DebugContentProps) => {
       <AppBar
         sx={{
           position: 'relative',
+          zIndex: 1,
         }}
       >
         <Toolbar>

@@ -11,7 +11,7 @@ import type {
   ResponseRecord,
   SimpleRequestContext,
   SimpleResponseContext,
-} from '@/views/SidePanel/Interceptors';
+} from '@/views/SidePanel/utils';
 
 function transformHeaders(headers: Headers) {
   return Array.from(headers.entries()).reduce<Record<string, string>>((pre, current) => {

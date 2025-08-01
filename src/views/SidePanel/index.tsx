@@ -6,6 +6,7 @@ import { buildMessage, isBridgeMessage, randomStr } from '@/utils';
 import { useRuntimeMessageListener } from '@/hooks';
 import { Debug } from './Interceptors/Debug';
 import { ConfigProvider } from './Interceptors/Context';
+import Records, { RecordsProvider } from './Records';
 
 const iframeSrc = chrome.runtime.getURL('extensions/sandbox/index.html');
 
@@ -76,27 +77,35 @@ const SidePanel = () => {
             >
               <Tabs>
                 <Tab label="xhr/fetch拦截器" value={0} />
+                <Tab label="拦截记录" value={1} />
               </Tabs>
             </Form.Item>
           </Grid>
         </Box>
-        <Box>
-          <Form.Update
-            control={control}
-          >
-            {
-              (control) => {
-                const value = control?.getValue();
-                if (value === 0) {
-                  return (
-                    <Interceptors />
-                  );
+        <RecordsProvider>
+          <Box>
+            <Form.Update
+              control={control}
+            >
+              {
+                (control) => {
+                  const value = control?.getValue();
+                  if (value === 0) {
+                    return (
+                      <Interceptors />
+                    );
+                  }
+                  if (value === 1) {
+                    return (
+                      <Records />
+                    );
+                  }
+                  return null;
                 }
-                return null;
               }
-            }
-          </Form.Update>
-        </Box>
+            </Form.Update>
+          </Box>
+        </RecordsProvider>
       </Box>
       <Debug sanbox={iframeRef} />
       <Iframe ref={iframeRef} src={iframeSrc} />

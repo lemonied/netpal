@@ -3,7 +3,6 @@ import { FocusBorder } from '@/components/FocusBorder';
 import Collapse from '@/components/Collapse';
 import { Box, Stack, Switch, TextField, Typography } from '@mui/material';
 import { CtxEditor } from './CtxEditor';
-import { Records } from './Records';
 
 const Item = () => {
 
@@ -90,7 +89,6 @@ const Item = () => {
             </Form.Item>
           </FocusBorder>
         </Collapse>
-        <Records />
       </Stack>
     </Box>
   );

@@ -1,5 +1,4 @@
 import React from 'react';
-import Form from 'form-pilot';
 import {
   Box,
   Collapse as MCollapse,
@@ -10,17 +9,16 @@ import {
   TableHead,
   TableRow,
   Typography,
-  Tooltip,
   TableContainer,
   Paper,
+  Stack,
 } from '@mui/material';
-import type { RequestRecord, ResponseRecord } from './util';
-import { safeParse } from './util';
+import type { RequestRecord, ResponseRecord } from '../utils';
+import { safeParse } from '../utils';
 import { DeleteOutline, FolderOpen, KeyboardArrowDown, KeyboardArrowUp } from '@mui/icons-material';
 import { EditorContainer, DiffEditor } from '@/components/CodeEditor';
-import Collapse from '@/components/Collapse';
-import { useRecords } from './Context';
 import { FocusBorder } from '@/components/FocusBorder';
+import { useRecords } from './Context';
 
 interface RecordState {
   id: string;
@@ -152,8 +150,7 @@ const Row = (props: RowProps) => {
 
 const Records = () => {
 
-  const key = Form.useWatch(['key']);
-  const { records, clear } = useRecords(key);
+  const { records, clear } = useRecords();
 
   const headers = [
     <TableCell />,
@@ -165,34 +162,20 @@ const Records = () => {
   ];
 
   return (
-    <Collapse
-      title={
-        <Box
-          sx={{
-            flex: 1,
-            display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'center',
-          }}
+    <Stack>
+      <Box
+        sx={{
+          display: 'flex',
+          justifyContent: 'flex-end',
+          gap: 1,
+        }}
+      >
+        <IconButton
+          onClick={clear}
         >
-          <Typography>拦截记录</Typography>
-          <Tooltip
-            title="Clear"
-            arrow
-            placement="left"
-          >
-            <IconButton
-              aria-label="clear"
-              size="small"
-              onClick={() => clear()}
-              color="error"
-            >
-              <DeleteOutline />
-            </IconButton>
-          </Tooltip>
-        </Box>
-      }
-    >
+          <DeleteOutline />
+        </IconButton>
+      </Box>
       <TableContainer
         component={Paper}
         sx={{
@@ -214,7 +197,7 @@ const Records = () => {
           </TableHead>
           <TableBody>
             {
-              records.map((record) => {
+              records?.map((record) => {
                 return (
                   <Row
                     key={record.id}
@@ -225,7 +208,7 @@ const Records = () => {
               })
             }
             {
-              !records.length && (
+              !records?.length && (
                 <TableRow>
                   <TableCell colSpan={headers.length}>
                     <Box
@@ -246,7 +229,7 @@ const Records = () => {
           </TableBody>
         </Table>
       </TableContainer>
-    </Collapse>
+    </Stack>
   );
 };
 
