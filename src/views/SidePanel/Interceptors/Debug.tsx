@@ -16,7 +16,7 @@ import { buildMessage, isBridgeMessage, isMatchType, MESSAGE_REPLY_SUFFIX } from
 import type { TransitionProps } from '@mui/material/transitions';
 import Form from 'form-pilot';
 import CodeEditor from '@/components/CodeEditor';
-import { useConfig } from './Context';
+import { useConfig } from '../Context';
 
 interface TProps extends TransitionProps {
   children: React.ReactElement<unknown>;

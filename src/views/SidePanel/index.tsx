@@ -5,7 +5,7 @@ import Form from 'form-pilot';
 import { buildMessage, isBridgeMessage, randomStr } from '@/utils';
 import { useRuntimeMessageListener } from '@/hooks';
 import { Debug } from './Interceptors/Debug';
-import { ConfigProvider } from './Interceptors/Context';
+import { ConfigProvider } from './Context';
 import Records, { RecordsProvider } from './Records';
 
 const iframeSrc = chrome.runtime.getURL('extensions/sandbox/index.html');
@@ -63,6 +63,8 @@ const SidePanel = () => {
         sx={{
           minWidth: 500,
           overflow: 'auto',
+          display: 'flex',
+          flexDirection: 'column',
         }}
       >
         <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
@@ -82,8 +84,13 @@ const SidePanel = () => {
             </Form.Item>
           </Grid>
         </Box>
-        <RecordsProvider>
-          <Box>
+        <Box
+          sx={{
+            flex: 1,
+            overflowY: 'auto',
+          }}
+        >
+          <RecordsProvider>
             <Form.Update
               control={control}
             >
@@ -104,8 +111,8 @@ const SidePanel = () => {
                 }
               }
             </Form.Update>
-          </Box>
-        </RecordsProvider>
+          </RecordsProvider>
+        </Box>
       </Box>
       <Debug sanbox={iframeRef} />
       <Iframe ref={iframeRef} src={iframeSrc} />

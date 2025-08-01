@@ -1,15 +1,14 @@
 import React from 'react';
 import Form from 'form-pilot';
 import Item from './Item';
-import { Box, Chip, FormControlLabel, IconButton, Stack, Switch, Tooltip, Typography } from '@mui/material';
+import { Box, Button, Chip, FormControlLabel, IconButton, Stack, Switch, Tooltip, Typography } from '@mui/material';
 import { DEFAULT_REQUEST_INTERCEPTOR, DEFAULT_RESPONSE_INTERCEPTOR } from '../utils';
-import { debounce } from 'lodash';
 import { buildMessage, getCurrentTab, getInterceptors, randomStr, saveInterceptor } from '@/utils';
-import { Add } from '@mui/icons-material';
+import { Add, Save } from '@mui/icons-material';
 import { createConfirm } from '@/components/Dialog';
-import { useConfig } from './Context';
+import { useConfig } from '../Context';
 
-const debounceSave = debounce(async (value: any) => {
+const saveToDB = async (value: any) => {
   await saveInterceptor(value);
   const tab = await getCurrentTab();
   const tabId = tab.id;
@@ -20,7 +19,7 @@ const debounceSave = debounce(async (value: any) => {
       data: await getInterceptors(),
     }));
   }
-}, 200);
+};
 
 const generateDefaultItem = () => {
   return {
@@ -34,27 +33,35 @@ const generateDefaultItem = () => {
 
 const Interceptors = () => {
 
-  const [tab, setTab] = React.useState(0);
   const control = Form.useControl();
+
+  const [tab, setTab] = React.useState(0);
+  const [initialValue, setInitialValue] = React.useState<any>();
 
   const { config, setConfig } = useConfig();
 
-  Form.useOnValueChange(({ newValue }) => {
-    const list: any[] = newValue?.list || [];
-    debounceSave(list);
-  }, control);
+  const save = () => {
+    const value = control.getValue();
+    saveToDB(value?.list);
+    setInitialValue(value);
+  };
 
   React.useEffect(() => {
     getInterceptors().then(value => {
-      control.setValue({
+      setInitialValue({
         list: value,
       });
     });
   }, [control]);
 
+  React.useEffect(() => {
+    control.reset();
+  }, [control, initialValue]);
+
   return (
     <Form
       control={control}
+      initialValues={initialValue}
     >
       <Form.List
         name="list"
@@ -179,6 +186,14 @@ const Interceptors = () => {
                     return null;
                   })()
                 }
+                <Button
+                  fullWidth
+                  startIcon={
+                    <Save />
+                  }
+                  variant="outlined"
+                  onClick={save}
+                >保存</Button>
               </Box>
             );
           }

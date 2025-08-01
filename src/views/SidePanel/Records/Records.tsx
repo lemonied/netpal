@@ -168,6 +168,7 @@ const Records = () => {
           display: 'flex',
           justifyContent: 'flex-end',
           gap: 1,
+          padding: 1,
         }}
       >
         <IconButton
@@ -178,13 +179,9 @@ const Records = () => {
       </Box>
       <TableContainer
         component={Paper}
-        sx={{
-          maxHeight: '100vh',
-        }}
       >
         <Table
           size="small"
-          stickyHeader
         >
           <TableHead>
             <TableRow>

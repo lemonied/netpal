@@ -3,6 +3,7 @@ import { getConfig, saveConfig } from '@/utils';
 
 export interface Config {
   enableDebug: boolean;
+  currentInterceptor?: string;
 }
 export interface ConfigContextType {
   config: Config;
