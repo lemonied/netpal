@@ -62,9 +62,10 @@ const SidePanel = () => {
       <Box
         sx={{
           minWidth: 500,
-          overflow: 'auto',
+          overflowX: 'auto',
           display: 'flex',
           flexDirection: 'column',
+          height: '100vh',
         }}
       >
         <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>

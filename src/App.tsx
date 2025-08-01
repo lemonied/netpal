@@ -1,5 +1,5 @@
 import SidePanel from './views/SidePanel';
-import { createTheme, ThemeProvider } from '@mui/material';
+import { createTheme, GlobalStyles, ThemeProvider } from '@mui/material';
 
 const theme = createTheme({
   components: {
@@ -22,6 +22,12 @@ function App() {
 
   return (
     <>
+      <GlobalStyles
+        styles={{
+          html: { margin: 0, padding: 0 },
+          body: { margin: 0, padding: 0 },
+        }}
+      />
       <ThemeProvider theme={theme}>
         <SidePanel />
       </ThemeProvider>
