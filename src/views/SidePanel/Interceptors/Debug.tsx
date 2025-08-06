@@ -4,6 +4,7 @@ import {
   Box,
   Button,
   Dialog,
+  FormControlLabel,
   Slide,
   Switch,
   Toolbar,
@@ -191,5 +192,30 @@ export const Debug = (props: DebugProps) => {
         }}
       />
     </Dialog>
+  );
+};
+
+export const DebugSwitch = () => {
+
+  const { config, setConfig } = useConfig();
+
+  return (
+    <FormControlLabel
+      labelPlacement="start"
+      control={
+        <Switch
+          checked={config.enableDebug}
+          onChange={e => {
+            setConfig?.(pre => {
+              return {
+                ...pre,
+                enableDebug: e.target.checked,
+              };
+            });
+          }}
+        />
+      }
+      label="Debug"
+    />
   );
 };

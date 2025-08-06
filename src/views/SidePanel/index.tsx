@@ -4,7 +4,7 @@ import { Box, Tab, Tabs, Grid, styled } from '@mui/material';
 import Form from 'form-pilot';
 import { buildMessage, isBridgeMessage, randomStr } from '@/utils';
 import { useRuntimeMessageListener } from '@/hooks';
-import { Debug } from './Interceptors/Debug';
+import { Debug, DebugSwitch } from './Interceptors/Debug';
 import { ConfigProvider } from './Context';
 import Records, { RecordsProvider } from './Records';
 
@@ -68,7 +68,15 @@ const SidePanel = () => {
           height: '100vh',
         }}
       >
-        <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
+        <Box
+          sx={{
+            borderBottom: 1,
+            borderColor: 'divider',
+            display: 'flex',
+            justifyContent: 'space-between',
+            padding: '0 8px 0 0',
+          }}
+        >
           <Grid
             container
             direction="row"
@@ -84,6 +92,7 @@ const SidePanel = () => {
               </Tabs>
             </Form.Item>
           </Grid>
+          <DebugSwitch />
         </Box>
         <Box
           sx={{

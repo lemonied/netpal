@@ -1,12 +1,12 @@
 import React from 'react';
 import Form from 'form-pilot';
 import Item from './Item';
-import { Box, Button, Chip, FormControlLabel, IconButton, Stack, Switch, Tooltip, Typography } from '@mui/material';
+import { Box, Button, Chip, IconButton, Stack, Tooltip, Typography } from '@mui/material';
 import { DEFAULT_REQUEST_INTERCEPTOR, DEFAULT_RESPONSE_INTERCEPTOR } from '../utils';
 import { buildMessage, getCurrentTab, getInterceptors, randomStr, saveInterceptor } from '@/utils';
 import { Add, Save } from '@mui/icons-material';
 import { createConfirm } from '@/components/Dialog';
-import { useConfig } from '../Context';
+import { cloneDeep } from 'lodash';
 
 const saveToDB = async (value: any) => {
   await saveInterceptor(value);
@@ -37,13 +37,12 @@ const Interceptors = () => {
 
   const [tab, setTab] = React.useState(0);
   const [initialValue, setInitialValue] = React.useState<any>();
-
-  const { config, setConfig } = useConfig();
+  const touched = Form.useWatch((_, ctl) => ctl.isTouched(), control);
 
   const save = () => {
     const value = control.getValue();
     saveToDB(value?.list);
-    setInitialValue(value);
+    setInitialValue(cloneDeep(value));
   };
 
   React.useEffect(() => {
@@ -154,22 +153,6 @@ const Interceptors = () => {
                       <Add />
                     </IconButton>
                   </Tooltip>
-                  <FormControlLabel
-                    control={
-                      <Switch
-                        checked={config.enableDebug}
-                        onChange={e => {
-                          setConfig?.(pre => {
-                            return {
-                              ...pre,
-                              enableDebug: e.target.checked,
-                            };
-                          });
-                        }}
-                      />
-                    }
-                    label={config.enableDebug ? '开启Debug' : '关闭Debug'}
-                  />
                 </Box>
                 {
                   (() => {
@@ -191,7 +174,7 @@ const Interceptors = () => {
                   startIcon={
                     <Save />
                   }
-                  variant="outlined"
+                  variant={touched ? 'contained' : 'outlined'}
                   onClick={save}
                 >保存</Button>
               </Box>
