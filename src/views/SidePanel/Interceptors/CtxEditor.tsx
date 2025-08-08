@@ -5,6 +5,7 @@ loader.init().then(monaco => {
   monaco.languages.typescript.javascriptDefaults.addExtraLib(`
 
 declare const frameURL: string;
+declare const files: string[];
 
 interface RequestContext {
   url: string;

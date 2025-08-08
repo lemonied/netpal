@@ -5,7 +5,7 @@ import {
   MESSAGE_REPLY_SUFFIX,
   randomStr,
   getCurrentTab,
-  getInterceptors,
+  getClientInterceptors,
 } from '@/utils';
 import type { BridgeMessage } from '@/utils';
 
@@ -43,7 +43,7 @@ chrome.tabs.onActivated.addListener(async (tab) => {
   chrome.tabs.sendMessage(tabId, buildMessage({
     type: 'interceptors-reload',
     key: randomStr('interceptors-reload'),
-    data: sidePanels.has(windowId) ? await getInterceptors() : [],
+    data: sidePanels.has(windowId) ? await getClientInterceptors() : [],
   }));
 });
 

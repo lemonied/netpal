@@ -47,22 +47,18 @@ function toSimple(ctx: RequestContext | ResponseContext): SimpleRequestContext |
 }
 
 async function evaluateScript<T = any>(item: Record<string, string>, simpleCtx: SimpleRequestContext | SimpleResponseContext) {
-  const isRequest = 'url' in simpleCtx;
-  const code = isRequest ? item.request : item.response;
-  return await sendMessageFromPage('evaluate-script', `
-const frameURL = ${JSON.stringify(window.location.href)};
-return (async (ctx) => {
-  if (new RegExp(${JSON.stringify(item.regex)}).test(${isRequest ? 'ctx.url' : 'ctx.request.url'})) {
-    const fn = ${code};
-    return fn(ctx);
-  }
-})(${JSON.stringify(simpleCtx)});
-`) as T;
+  return await sendMessageFromPage('evaluate-script', {
+    key: item.key,
+    params: {
+      frameURL: window.location.href,
+      ctx: simpleCtx,
+    },
+  }) as T;
 }
 
 let uninstaller: (() => void)[] = [];
 
-function reload(interceptors?: any[]) {
+function reload(interceptors?: { key: string; }[]) {
   uninstaller.forEach(uninstall => uninstall());
   uninstaller = [];
   interceptors?.forEach(item => {
@@ -73,27 +69,25 @@ function reload(interceptors?: any[]) {
     uninstaller.push(() => resolved?.());
 
     const req: Middleware<RequestContext> = async (ctx, next) => {
-      if (item.enabled) {
-        const simpleCtx = toSimple(ctx);
-        const obj = await Promise.race([
-          cancel,
-          evaluateScript<SimpleRequestContext>(item, simpleCtx),
-        ]);
-        if (typeof obj !== 'undefined') {
-          ctx.url = obj.url;
-          ctx.body = typeof ctx.body === 'string' ? obj.body : ctx.body;
-          ctx.headers = new Headers(obj.headers);
-          emitMessageFromPage('intercept-records', {
-            type: 'request',
-            id: ctx.id,
-            key: item.key,
-            before: simpleCtx as SimpleRequestContext,
-            after: {
-              ...toSimple(ctx),
-              timestamp: Date.now(),
-            } as SimpleRequestContext,
-          } satisfies RequestRecord);
-        }
+      const simpleCtx = toSimple(ctx);
+      const obj = await Promise.race([
+        cancel,
+        evaluateScript<SimpleRequestContext>(item, simpleCtx),
+      ]);
+      if (typeof obj !== 'undefined') {
+        ctx.url = obj.url;
+        ctx.body = typeof ctx.body === 'string' ? obj.body : ctx.body;
+        ctx.headers = new Headers(obj.headers);
+        emitMessageFromPage('intercept-records', {
+          type: 'request',
+          id: ctx.id,
+          key: item.key,
+          before: simpleCtx as SimpleRequestContext,
+          after: {
+            ...toSimple(ctx),
+            timestamp: Date.now(),
+          } as SimpleRequestContext,
+        } satisfies RequestRecord);
       }
       await next();
     };
@@ -106,25 +100,23 @@ function reload(interceptors?: any[]) {
     });
 
     const res: Middleware<ResponseContext> = async (ctx, next) => {
-      if (item.enabled) {
-        const simpleCtx = toSimple(ctx);
-        const obj = await Promise.race([
-          cancel,
-          evaluateScript<SimpleResponseContext>(item, simpleCtx),
-        ]);
-        if (typeof obj !== 'undefined') {
-          ctx.body = typeof ctx.body === 'string' ? obj.body : ctx.body;
-          emitMessageFromPage('intercept-records', {
-            type: 'response',
-            id: ctx.id,
-            key: item.key,
-            before: simpleCtx as SimpleResponseContext,
-            after: {
-              ...toSimple(ctx),
-              timestamp: Date.now(),
-            } as SimpleResponseContext,
-          } satisfies ResponseRecord);
-        }
+      const simpleCtx = toSimple(ctx);
+      const obj = await Promise.race([
+        cancel,
+        evaluateScript<SimpleResponseContext>(item, simpleCtx),
+      ]);
+      if (typeof obj !== 'undefined') {
+        ctx.body = typeof ctx.body === 'string' ? obj.body : ctx.body;
+        emitMessageFromPage('intercept-records', {
+          type: 'response',
+          id: ctx.id,
+          key: item.key,
+          before: simpleCtx as SimpleResponseContext,
+          after: {
+            ...toSimple(ctx),
+            timestamp: Date.now(),
+          } as SimpleResponseContext,
+        } satisfies ResponseRecord);
       }
       await next();
     };

@@ -3,6 +3,8 @@
  * @see https://developer.chrome.com/docs/extensions/reference/api
  */
 
+import { pick } from 'lodash';
+
 export async function getCurrentTab() {
   const [tab] = await chrome.tabs.query({ active: true, lastFocusedWindow: true });
   return tab;
@@ -20,6 +22,11 @@ export async function getInterceptors(): Promise<any[]> {
     /* empty */
   }
   return [];
+}
+
+export async function getClientInterceptors() {
+  const interceptors = await getInterceptors();
+  return interceptors.map(item => pick(item, ['key']));
 }
 
 export async function saveConfig(value: any) {

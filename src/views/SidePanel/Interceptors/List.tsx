@@ -3,7 +3,14 @@ import Form from 'form-pilot';
 import Item from './Item';
 import { Box, Button, Chip, IconButton, Stack, Tooltip, Typography } from '@mui/material';
 import { DEFAULT_REQUEST_INTERCEPTOR, DEFAULT_RESPONSE_INTERCEPTOR } from '../utils';
-import { buildMessage, getCurrentTab, getInterceptors, randomStr, saveInterceptor } from '@/utils';
+import {
+  buildMessage,
+  getCurrentTab,
+  getInterceptors,
+  getClientInterceptors,
+  randomStr,
+  saveInterceptor,
+} from '@/utils';
 import { Add, Save } from '@mui/icons-material';
 import { createConfirm } from '@/components/Dialog';
 import { cloneDeep } from 'lodash';
@@ -16,7 +23,7 @@ const saveToDB = async (value: any) => {
     chrome.tabs.sendMessage(tabId, buildMessage({
       type: 'interceptors-reload',
       key: randomStr('interceptors-reload'),
-      data: await getInterceptors(),
+      data: await getClientInterceptors(),
     }));
   }
 };
@@ -169,14 +176,20 @@ const Interceptors = () => {
                     return null;
                   })()
                 }
-                <Button
-                  fullWidth
-                  startIcon={
-                    <Save />
-                  }
-                  variant={touched ? 'contained' : 'outlined'}
-                  onClick={save}
-                >保存</Button>
+                <Box
+                  sx={{
+                    padding: 2,
+                  }}
+                >
+                  <Button
+                    fullWidth
+                    startIcon={
+                      <Save />
+                    }
+                    variant={touched ? 'contained' : 'outlined'}
+                    onClick={save}
+                  >保存</Button>
+                </Box>
               </Box>
             );
           }

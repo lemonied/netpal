@@ -1,5 +1,5 @@
 import {
-  getInterceptors,
+  getClientInterceptors,
   isBridgeMessage,
   isMatchType,
   MESSAGE_REPLY_SUFFIX,
@@ -38,7 +38,7 @@ function init() {
             window.dispatchEvent(new CustomEvent(NETPAL_RUNTIME_EVENT_NAME, {
               detail: {
                 ...message,
-                data: await getInterceptors(),
+                data: await getClientInterceptors(),
                 type: `${message.type}${MESSAGE_REPLY_SUFFIX}`,
               },
             }));

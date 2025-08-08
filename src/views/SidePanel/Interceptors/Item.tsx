@@ -3,6 +3,7 @@ import { FocusBorder } from '@/components/FocusBorder';
 import Collapse from '@/components/Collapse';
 import { Box, Stack, Switch, TextField, Typography } from '@mui/material';
 import { CtxEditor } from './CtxEditor';
+import { Files } from './Files';
 
 const Item = () => {
 
@@ -60,34 +61,52 @@ const Item = () => {
             <Typography>请求拦截器</Typography>
           }
         >
-          <FocusBorder
-            style={{
-              padding: '10px 6px',
+          <Box
+            sx={{
+              display: 'flex',
+              flexDirection: 'column',
+              gap: 1,
             }}
           >
-            <Form.Item
-              name="request"
+            <Files name="requestFiles" />
+            <FocusBorder
+              style={{
+                padding: '10px 6px',
+              }}
             >
-              <CtxEditor />
-            </Form.Item>
-          </FocusBorder>
+              <Form.Item
+                name="request"
+              >
+                <CtxEditor />
+              </Form.Item>
+            </FocusBorder>
+          </Box>
         </Collapse>
         <Collapse
           title={
             <Typography>响应拦截器</Typography>
           }
         >
-          <FocusBorder
-            style={{
-              padding: '10px 6px',
+          <Box
+            sx={{
+              display: 'flex',
+              flexDirection: 'column',
+              gap: 1,
             }}
           >
-            <Form.Item
-              name="response"
+            <Files name="responseFiles" />
+            <FocusBorder
+              style={{
+                padding: '10px 6px',
+              }}
             >
-              <CtxEditor />
-            </Form.Item>
-          </FocusBorder>
+              <Form.Item
+                name="response"
+              >
+                <CtxEditor />
+              </Form.Item>
+            </FocusBorder>
+          </Box>
         </Collapse>
       </Stack>
     </Box>

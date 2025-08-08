@@ -2,7 +2,7 @@ import React from 'react';
 import Interceptors from './Interceptors';
 import { Box, Tab, Tabs, Grid, styled } from '@mui/material';
 import Form from 'form-pilot';
-import { buildMessage, isBridgeMessage, randomStr } from '@/utils';
+import { buildMessage, getInterceptors, isBridgeMessage, randomStr } from '@/utils';
 import { useRuntimeMessageListener } from '@/hooks';
 import { Debug, DebugSwitch } from './Interceptors/Debug';
 import { ConfigProvider } from './Context';
@@ -36,24 +36,34 @@ const SidePanel = () => {
 
   const control = Form.useControl();
 
-  useRuntimeMessageListener('evaluate-script', (message, _, sendResponse) => {
-    const key = randomStr('eval');
-    const listener = (e: MessageEvent) => {
-      const message = e.data;
-      if (isBridgeMessage(message) && message.key === key) {
-        sendResponse(message.data, message.error);
-        window.removeEventListener('message', listener);
+  useRuntimeMessageListener('evaluate-script', (data, _, sendResponse) => {
+    (async () => {
+      const interceptors = await getInterceptors();
+      const interceptor = interceptors.find(v => v.key === data.key);
+      if (!interceptor || !interceptor.enabled) {
+        return sendResponse();
       }
-    };
-    window.addEventListener('message', listener);
-    iframeRef.current?.contentWindow?.postMessage(
-      buildMessage({
-        type: 'evaluate-script',
-        key,
-        data: message,
-      }),
-      '*',
-    );
+      const key = randomStr('eval');
+      const listener = (e: MessageEvent) => {
+        const message = e.data;
+        if (isBridgeMessage(message) && message.key === key) {
+          sendResponse(message.data, message.error);
+          window.removeEventListener('message', listener);
+        }
+      };
+      window.addEventListener('message', listener);
+      iframeRef.current?.contentWindow?.postMessage(
+        buildMessage({
+          type: 'evaluate-script',
+          key,
+          data: {
+            interceptor,
+            params: data.params,
+          },
+        }),
+        '*',
+      );
+    })();
     return true;
   });
 
