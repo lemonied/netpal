@@ -13,7 +13,7 @@ import {
 } from '@/utils';
 import { Add, Save } from '@mui/icons-material';
 import { createConfirm } from '@/components/Dialog';
-import { cloneDeep } from 'lodash';
+import { isEqual } from 'lodash';
 
 const saveToDB = async (value: any) => {
   await saveInterceptor(value);
@@ -43,31 +43,32 @@ const Interceptors = () => {
   const control = Form.useControl();
 
   const [tab, setTab] = React.useState(0);
-  const [initialValue, setInitialValue] = React.useState<any>();
-  const touched = Form.useWatch((_, ctl) => ctl.isTouched(), control);
+  const initialValue = React.useRef<any>(null);
+  const [changed, setChanged] = React.useState(false);
+
+  Form.useOnValueChange(({ newValue }) => {
+    setChanged(!isEqual(initialValue.current, newValue));
+  }, control);
 
   const save = () => {
     const value = control.getValue();
     saveToDB(value?.list);
-    setInitialValue(cloneDeep(value));
+    initialValue.current = value;
+    setChanged(false);
   };
 
   React.useEffect(() => {
     getInterceptors().then(value => {
-      setInitialValue({
+      initialValue.current = {
         list: value,
-      });
+      };
+      control.setValue(initialValue.current);
     });
   }, [control]);
-
-  React.useEffect(() => {
-    control.reset();
-  }, [control, initialValue]);
 
   return (
     <Form
       control={control}
-      initialValues={initialValue}
     >
       <Form.List
         name="list"
@@ -186,7 +187,7 @@ const Interceptors = () => {
                     startIcon={
                       <Save />
                     }
-                    variant={touched ? 'contained' : 'outlined'}
+                    variant={changed ? 'contained' : 'outlined'}
                     onClick={save}
                   >保存</Button>
                 </Box>
