@@ -1,5 +1,5 @@
 import React from 'react';
-import { Collapse as MCollapse, Stack, Box, IconButton } from '@mui/material';
+import { Collapse as MCollapse, Stack, Box, IconButton, Typography } from '@mui/material';
 import type { CollapseProps as MCollapseProps } from '@mui/material';
 import { KeyboardArrowUp, KeyboardArrowDown } from '@mui/icons-material';
 
@@ -32,7 +32,14 @@ const Collapse = (props: CollapseProps) => {
               <KeyboardArrowDown />
           }
         </IconButton>
-        {title}
+        <Typography
+          sx={{
+            ':hover': {
+              cursor: 'pointer',
+            },
+          }}
+          onClick={() => setState(pre => !pre)}
+        >{title}</Typography>
       </Box>
       <MCollapse
         {...restProps}

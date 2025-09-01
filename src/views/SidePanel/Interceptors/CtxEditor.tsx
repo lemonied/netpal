@@ -5,7 +5,10 @@ loader.init().then(monaco => {
   monaco.languages.typescript.javascriptDefaults.addExtraLib(`
 
 declare const frameURL: string;
-declare const files: string[];
+declare const files: Array<{
+  name: string;
+  content: string;
+}>;
 
 interface RequestContext {
   url: string;
@@ -23,6 +26,7 @@ interface ResponseContext {
 function ResponseInterceptor(ctx: ResponseContext): Promise<ResponseContext>;
 
 declare function debug(ctx: RequestContext | ResponseContext): Promise<void>;
+declare function sleep(timestamp: number): Promise<void>;
 `);
 });
 

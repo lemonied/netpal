@@ -1,6 +1,14 @@
-import { Box, Button, Dialog, DialogActions, DialogContent, DialogTitle } from '@mui/material';
+import { Box, Button, createTheme, Dialog, DialogActions, DialogContent, DialogTitle, ThemeProvider } from '@mui/material';
 import React from 'react';
 import { createRoot } from 'react-dom/client';
+
+const theme = createTheme({
+  typography: {
+    body1: {
+      fontSize: 14,
+    },
+  },
+});
 
 interface ConfirmContentProps {
   title?: React.ReactNode;
@@ -20,41 +28,44 @@ const ConfirmContent = (props: ConfirmContentProps) => {
   };
 
   return (
-    <Dialog
-      open={state}
-      slotProps={{
-        transition: {
-          onExited() {
-            window.setTimeout(() => {
-              afterClose?.();
-            });
+    <ThemeProvider theme={theme}>
+      <Dialog
+        open={state}
+        slotProps={{
+          transition: {
+            onExited() {
+              window.setTimeout(() => {
+                afterClose?.();
+              });
+            },
           },
-        },
-      }}
-      onClose={() => {
-        close(false);
-      }}
-    >
-      <DialogTitle>{title}</DialogTitle>
-      <DialogContent dividers>
-        <Box
-          sx={{
-            width: 260,
-          }}
-        >{content}</Box>
-      </DialogContent>
-      <DialogActions>
-        <Button
-          onClick={() => {
-            close(false);
-          }}>取消</Button>
-        <Button
-          onClick={() => {
-            close(true);
-          }}
-        >确认</Button>
-      </DialogActions>
-    </Dialog>
+        }}
+        onClose={() => {
+          close(false);
+        }}
+      >
+        <DialogTitle>{title}</DialogTitle>
+        <DialogContent dividers>
+          <Box
+            sx={{
+              width: 280,
+              fontSize: 14,
+            }}
+          >{content}</Box>
+        </DialogContent>
+        <DialogActions>
+          <Button
+            onClick={() => {
+              close(false);
+            }}>取消</Button>
+          <Button
+            onClick={() => {
+              close(true);
+            }}
+          >确认</Button>
+        </DialogActions>
+      </Dialog>
+    </ThemeProvider>
   );
 };
 

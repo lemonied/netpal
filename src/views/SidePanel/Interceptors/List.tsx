@@ -11,7 +11,7 @@ import {
   randomStr,
   saveInterceptor,
 } from '@/utils';
-import { Add, Save } from '@mui/icons-material';
+import { Add, Check, LinkOff, Save } from '@mui/icons-material';
 import { createConfirm } from '@/components/Dialog';
 import { isEqual } from 'lodash';
 
@@ -103,46 +103,66 @@ const Interceptors = () => {
                             }}
                           >
                             {
-                              (itemControl) => (
-                                <Chip
-                                  key={field.key}
-                                  onClick={() => {
-                                    setTab(field.name);
-                                  }}
-                                  variant={field.name === tab ? 'filled' : 'outlined'}
-                                  onDelete={() => {
-                                    createConfirm({
-                                      title: '警告',
-                                      content: (
-                                        <Stack
-                                          direction="row"
-                                          alignItems="center"
-                                          spacing={1}
-                                        >
-                                          <Typography>确定删除</Typography>
-                                          <Chip
-                                            size="small"
-                                            color="warning"
-                                            label={itemControl?.getValue()?.regex}
-                                            sx={{
-                                              minWidth: 35,
-                                            }}
-                                          />
-                                        </Stack>
-                                      ),
-                                    }).then((confirm) => {
-                                      if (confirm) {
-                                        control.remove(field.name);
-                                        if (field.name === tab) {
-                                          setTab(Math.max(0, field.name - 1));
+                              (itemControl) => {
+                                const isCurrent = field.name === tab;
+                                return (
+                                  <Chip
+                                    key={field.key}
+                                    onClick={() => {
+                                      setTab(field.name);
+                                    }}
+                                    variant={isCurrent ? 'filled' : 'outlined'}
+                                    onDelete={() => {
+                                      createConfirm({
+                                        title: '警告',
+                                        content: (
+                                          <Stack
+                                            direction="row"
+                                            alignItems="center"
+                                            spacing={1}
+                                          >
+                                            <Typography>确定删除</Typography>
+                                            <Chip
+                                              size="small"
+                                              color="warning"
+                                              label={itemControl?.getValue()?.regex}
+                                              sx={{
+                                                minWidth: 35,
+                                                maxWidth: 180,
+                                              }}
+                                            />
+                                            <Typography>吗?</Typography>
+                                          </Stack>
+                                        ),
+                                      }).then((confirm) => {
+                                        if (confirm) {
+                                          control.remove(field.name);
+                                          if (isCurrent) {
+                                            setTab(Math.max(0, field.name - 1));
+                                          }
                                         }
-                                      }
-                                    });
-                                  }}
-                                  color={itemControl?.getValue()?.enabled ? 'primary' : 'default'}
-                                  label={itemControl?.getValue()?.regex}
-                                />
-                              )
+                                      });
+                                    }}
+                                    color="primary"
+                                    label={
+                                      <Stack
+                                        direction="row"
+                                        alignItems="center"
+                                        spacing={1}
+                                      >
+                                        {
+                                          itemControl?.getValue()?.enabled ? (
+                                            <Check color={isCurrent ? 'inherit' : 'success'} />
+                                          ) : (
+                                            <LinkOff color={isCurrent ? 'inherit' : 'error'} />
+                                          )
+                                        }
+                                        <Typography>{itemControl?.getValue()?.regex}</Typography>
+                                      </Stack>
+                                    }
+                                  />
+                                );
+                              }
                             }
                           </Form.Update>
                         </Form.Group>

@@ -64,14 +64,16 @@ const Files = (props: FilesProps) => {
                                           alignItems="center"
                                           spacing={1}
                                         >
-                                          <Typography>确定删除</Typography>
+                                          <Typography>确定删除文件</Typography>
                                           <Chip
                                             size="small"
                                             label={p.value as string}
                                             sx={{
                                               minWidth: 35,
+                                              maxWidth: 180,
                                             }}
                                           />
+                                          <Typography>吗?</Typography>
                                         </Stack>
                                       ),
                                     }).then((confirm) => {
