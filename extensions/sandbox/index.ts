@@ -35,7 +35,7 @@ const debug = async (ctx: any) => {
     window.addEventListener('message', listener);
   });
   debugQueue.push(promise);
-  return await promise;
+  await promise;
 };
 
 window.addEventListener('message', async (e) => {
