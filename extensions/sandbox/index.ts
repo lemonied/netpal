@@ -3,6 +3,7 @@ import {
   isMatchType,
   MESSAGE_REPLY_SUFFIX,
 } from '@/utils';
+import type { BridgeMessage } from '@/utils';
 import { debug } from './debug';
 import { sleep } from './sleep';
 
@@ -50,15 +51,16 @@ return (async (ctx) => {
         type: `${message.type}${MESSAGE_REPLY_SUFFIX}`,
         key,
         data: await result,
-      }, '*');
+      } satisfies BridgeMessage, '*');
     } catch (e: any) {
       // eslint-disable-next-line no-console
       console.error(e);
       window.parent.postMessage({
         type: `${message.type}${MESSAGE_REPLY_SUFFIX}`,
+        key,
         error: e?.message,
         data: undefined,
-      }, '*');
+      } satisfies BridgeMessage, '*');
     }
   }
 });
