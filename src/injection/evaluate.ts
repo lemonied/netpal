@@ -138,28 +138,6 @@ const init = new Promise<void>(resolve => resolved = resolve);
 window.netpalInterceptors.request.push(async (_, next) => {
   await init;
   await next();
-}, async (ctx, next) => {
-  const requestContextMap = window.netpalInterceptors.requestContextMap;
-  requestContextMap.set(ctx.id, ctx);
-  try {
-    await next();
-    requestContextMap.delete(ctx.id);
-  } catch (e) {
-    requestContextMap.delete(ctx.id);
-    throw e;
-  }
-});
-
-window.netpalInterceptors.response.push(async (ctx, next) => {
-  const responseContextMap = window.netpalInterceptors.responseContextMap;
-  responseContextMap.set(ctx.id, ctx);
-  try {
-    await next();
-    responseContextMap.delete(ctx.id);
-  } catch (e) {
-    responseContextMap.delete(ctx.id);
-    throw e;
-  }
 });
 
 handleInterceptorsChange((data) => {

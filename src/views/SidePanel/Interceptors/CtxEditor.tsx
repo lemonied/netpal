@@ -27,7 +27,7 @@ function ResponseInterceptor(ctx: ResponseContext): Promise<ResponseContext>;
 
 declare function debug(ctx: RequestContext | ResponseContext): Promise<void>;
 declare function sleep(timestamp: number): Promise<void>;
-`);
+`, 'sandbox-ctx.js');
 });
 
 const CtxEditor = (props: EditorProps) => {

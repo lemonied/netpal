@@ -77,7 +77,9 @@ const Item = () => {
               <Form.Item
                 name="request"
               >
-                <CtxEditor />
+                <CtxEditor
+                  path="sandbox-ctx.js"
+                />
               </Form.Item>
             </FocusBorder>
           </Box>
@@ -103,7 +105,9 @@ const Item = () => {
               <Form.Item
                 name="response"
               >
-                <CtxEditor />
+                <CtxEditor
+                  path="sandbox-ctx.js"
+                />
               </Form.Item>
             </FocusBorder>
           </Box>
