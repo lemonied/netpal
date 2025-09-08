@@ -14,6 +14,7 @@ import {
 import type { SimpleRequestContext, SimpleResponseContext } from '../utils';
 import { safeParse } from '../utils';
 import { buildMessage, isBridgeMessage, isMatchType, MESSAGE_REPLY_SUFFIX } from '@/utils';
+import type { BridgeMessage } from '@/utils';
 import type { TransitionProps } from '@mui/material/transitions';
 import Form from 'form-pilot';
 import CodeEditor from '@/components/CodeEditor';
@@ -131,13 +132,13 @@ const DebugContent = (props: DebugContentProps) => {
 };
 
 interface DebugProps {
-  sanbox: React.RefObject<HTMLIFrameElement | null>;
+  sendToSanbox: (data: any) => void;
 }
 export const Debug = (props: DebugProps) => {
 
-  const { sanbox } = props;
-  const sandboxRef = React.useRef(sanbox.current);
-  sandboxRef.current = sanbox.current;
+  const { sendToSanbox } = props;
+  const sendToSanboxRef = React.useRef(sendToSanbox);
+  sendToSanboxRef.current = sendToSanbox;
 
   const { config } = useConfig();
   const enableDebug = React.useRef(config.enableDebug);
@@ -146,25 +147,42 @@ export const Debug = (props: DebugProps) => {
   const [data, setData] = React.useState<SimpleRequestContext | SimpleResponseContext>();
   const resolved = React.useRef<(value: SimpleRequestContext | SimpleResponseContext) => void>(null);
 
+  const debugQueueRef = React.useRef<Promise<void>[]>([]);
+
+  const fnRef = React.useRef(async (message: BridgeMessage) => {
+    const debugQueue = debugQueueRef.current;
+    await Promise.all(debugQueue);
+    const data: SimpleRequestContext | SimpleResponseContext = message.data;
+    let nextData = data;
+    if (enableDebug.current) {
+      setData(data);
+      const promise = new Promise<SimpleRequestContext | SimpleResponseContext>((resolve) => {
+        resolved.current = resolve;
+      }).then(res => {
+        nextData = res;
+      });
+      debugQueue.push(promise);
+      await promise;
+      const index = debugQueue.indexOf(promise);
+      if (index > -1) {
+        debugQueue.splice(index, 1);
+      }
+    }
+    return nextData;
+  });
+
+
   React.useEffect(() => {
     const listener = async (e: MessageEvent) => {
       const message = e.data;
       if (isBridgeMessage(message) && isMatchType(message, 'debug')) {
-        const data: SimpleRequestContext | SimpleResponseContext = message.data;
-        let nextData = data;
-        if (enableDebug.current) {
-          setData(data);
-          nextData = await new Promise<SimpleRequestContext | SimpleResponseContext>((resolve) => {
-            resolved.current = resolve;
-          });
-        }
-        sandboxRef.current?.contentWindow?.postMessage(
+        const nextData = fnRef.current(message);
+        sendToSanboxRef.current(
           buildMessage({
             ...message,
             type: `${message.type}${MESSAGE_REPLY_SUFFIX}`,
             data: nextData,
           }),
-          '*',
         );
       }
     };

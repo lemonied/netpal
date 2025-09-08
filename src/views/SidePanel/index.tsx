@@ -134,7 +134,11 @@ const SidePanel = () => {
           </RecordsProvider>
         </Box>
       </Box>
-      <Debug sanbox={iframeRef} />
+      <Debug
+        sendToSanbox={(data) => {
+          iframeRef.current?.contentWindow?.postMessage(data, '*');
+        }}
+      />
       <Iframe ref={iframeRef} src={iframeSrc} />
     </ConfigProvider>
   );

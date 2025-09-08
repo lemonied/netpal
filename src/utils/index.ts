@@ -6,3 +6,4 @@ export * from './prototype';
 export * from './random';
 export * from './runtime';
 export * from './scene';
+export * from './sleep';

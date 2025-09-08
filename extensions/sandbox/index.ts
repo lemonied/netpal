@@ -2,10 +2,10 @@ import {
   isBridgeMessage,
   isMatchType,
   MESSAGE_REPLY_SUFFIX,
+  sleep,
 } from '@/utils';
 import type { BridgeMessage } from '@/utils';
 import { debug } from './debug';
-import { sleep } from './sleep';
 
 window.addEventListener('message', async (e) => {
   const message = e.data;
