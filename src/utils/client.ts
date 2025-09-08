@@ -4,6 +4,7 @@ import {
   isBridgeMessage,
   isMatchReply,
   isMatchType,
+  MESSAGE_REPLY_SUFFIX,
   NETPAL_EVENT_NAME,
   NETPAL_RUNTIME_EVENT_NAME,
 } from './bridge';
@@ -50,11 +51,19 @@ export function sendMessageFromPage<T = any, R = any>(...args: Parameters<typeof
   });
 }
 
-export function messageListenerForPage<T = any>(type: BridgeMessage<T>['type'], cb: (data: T) => any) {
+export function messageListenerForPage<T = any>(type: BridgeMessage<T>['type'], cb: (data: T, reply: (resData: any) => void) => any) {
   function eventHandler(e: CustomEvent) {
     const data = e.detail;
     if (isBridgeMessage(data) && isMatchType(data, type)) {
-      cb(data.data);
+      cb(data.data, (resData) => {
+        window.dispatchEvent(new CustomEvent(NETPAL_EVENT_NAME, {
+          detail: buildMessage({
+            type: `${type}${MESSAGE_REPLY_SUFFIX}`,
+            key: data.key,
+            data: resData,
+          }),
+        }));
+      });
     }
   };
   window.addEventListener(NETPAL_RUNTIME_EVENT_NAME, eventHandler as any);

@@ -22,6 +22,7 @@ function transformHeaders(headers: Headers) {
 
 function toSimpleRequest(ctx: RequestContext): SimpleRequestContext {
   return {
+    id: ctx.id,
     type: 'request',
     initiator: ctx.type,
     url: new URL(ctx.url, window.location.href).href,
@@ -37,6 +38,7 @@ function toSimple(ctx: RequestContext | ResponseContext): SimpleRequestContext |
     return toSimpleRequest(ctx);
   }
   return {
+    id: ctx.id,
     type: 'response',
     headers: transformHeaders(ctx.headers),
     status: ctx.status,
@@ -136,6 +138,28 @@ const init = new Promise<void>(resolve => resolved = resolve);
 window.netpalInterceptors.request.push(async (_, next) => {
   await init;
   await next();
+}, async (ctx, next) => {
+  const requestContextMap = window.netpalInterceptors.requestContextMap;
+  requestContextMap.set(ctx.id, ctx);
+  try {
+    await next();
+    requestContextMap.delete(ctx.id);
+  } catch (e) {
+    requestContextMap.delete(ctx.id);
+    throw e;
+  }
+});
+
+window.netpalInterceptors.response.push(async (ctx, next) => {
+  const responseContextMap = window.netpalInterceptors.responseContextMap;
+  responseContextMap.set(ctx.id, ctx);
+  try {
+    await next();
+    responseContextMap.delete(ctx.id);
+  } catch (e) {
+    responseContextMap.delete(ctx.id);
+    throw e;
+  }
 });
 
 handleInterceptorsChange((data) => {

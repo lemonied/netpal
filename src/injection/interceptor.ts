@@ -28,6 +28,10 @@ export class RequestContext extends ContextBase {
 
 const requestInterceptors: Middleware<RequestContext>[] = [];
 
+const requestContextMap = new Map<string, RequestContext>();
+
+const responseContextMap = new Map<string, ResponseContext>();
+
 export class ResponseContext extends ContextBase {
   body: any;
   id: string;
@@ -52,6 +56,8 @@ declare global {
     netpalInterceptors: {
       request: typeof requestInterceptors;
       response: typeof responseInterceptors;
+      requestContextMap: typeof requestContextMap;
+      responseContextMap: typeof responseContextMap;
     };
   }
 }
@@ -59,4 +65,6 @@ declare global {
 window.netpalInterceptors = {
   request: requestInterceptors,
   response: responseInterceptors,
+  requestContextMap,
+  responseContextMap,
 };

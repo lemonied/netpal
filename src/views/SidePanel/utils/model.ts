@@ -1,4 +1,8 @@
-export interface SimpleRequestContext {
+interface SharedSimpleContext {
+  id: string;
+}
+
+export interface SimpleRequestContext extends SharedSimpleContext {
   readonly type: 'request';
   readonly initiator: 'xhr' | 'fetch';
   readonly timestamp: number;
@@ -7,17 +11,17 @@ export interface SimpleRequestContext {
   body?: string;
 }
 
-export interface SimpleRequestInterceptor {
-  (ctx: SimpleRequestContext): Promise<SimpleRequestContext>;
-}
-
-export interface SimpleResponseContext {
+export interface SimpleResponseContext extends SharedSimpleContext {
   readonly type: 'response';
   readonly timestamp: number;
   readonly headers: Record<string, string>;
   body?: string;
   readonly status: number;
   readonly request: SimpleRequestContext;
+}
+
+export interface SimpleRequestInterceptor {
+  (ctx: SimpleRequestContext): Promise<SimpleRequestContext>;
 }
 
 interface SharedRecord {
