@@ -26,7 +26,12 @@ export async function getInterceptors(): Promise<any[]> {
 
 export async function getClientInterceptors() {
   const interceptors = await getInterceptors();
-  return interceptors.map(item => pick(item, ['key']));
+  return interceptors.map(item => pick(item, ['key', 'sandbox']));
+}
+
+export async function getInterceptor(key: string) {
+  const interceptors = await getInterceptors();
+  return interceptors.find(item => item.key === key);
 }
 
 export async function saveConfig(value: any) {

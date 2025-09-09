@@ -6,7 +6,6 @@ import {
   NETPAL_EVENT_NAME,
   NETPAL_RUNTIME_EVENT_NAME,
 } from '@/utils';
-import type { BridgeMessage } from '@/utils';
 
 function inject() {
   const isTop = window === window.top;
@@ -46,9 +45,13 @@ function init() {
           break;
         }
         default: {
-          chrome.runtime.sendMessage(message).then((res: BridgeMessage) => {
+          chrome.runtime.sendMessage(message).then((res: any) => {
             window.dispatchEvent(new CustomEvent(NETPAL_RUNTIME_EVENT_NAME, {
-              detail: res,
+              detail: {
+                key: message.key,
+                type: `${message.type}${MESSAGE_REPLY_SUFFIX}`,
+                ...res,
+              },
             }));
           });
         }

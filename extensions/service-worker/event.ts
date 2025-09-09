@@ -2,12 +2,10 @@ import {
   buildMessage,
   isBridgeMessage,
   isMatchType,
-  MESSAGE_REPLY_SUFFIX,
   randomStr,
   getCurrentTab,
   getClientInterceptors,
 } from '@/utils';
-import type { BridgeMessage } from '@/utils';
 
 const sidePanels = new Set<number>();
 
@@ -61,10 +59,8 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
       }
       case isMatchType(message, 'get-panel-status'): {
         sendResponse({
-          ...message,
           data: sidePanels.has(windowId),
-          type: `${message.type}${MESSAGE_REPLY_SUFFIX}`,
-        } satisfies BridgeMessage);
+        });
         return true;
       }
       default: {

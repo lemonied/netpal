@@ -2,6 +2,7 @@ import {
   emitMessageFromPage,
   sendMessageFromPage,
   handleInterceptorsChange,
+  sleep,
 } from '@/utils';
 import type { Middleware } from '@/utils';
 import { RequestContext } from './interceptor';
@@ -48,14 +49,42 @@ function toSimple(ctx: RequestContext | ResponseContext): SimpleRequestContext |
   } satisfies SimpleResponseContext;
 }
 
-async function evaluateScript<T = any>(item: Record<string, string>, simpleCtx: SimpleRequestContext | SimpleResponseContext) {
-  return await sendMessageFromPage('evaluate-script', {
+async function evaluateScript<T = any>(item: Record<string, string>, ctx: RequestContext | ResponseContext): Promise<T | null | undefined> {
+  const simpleCtx = toSimple(ctx);
+  const frameURL = window.location.href;
+  if (!item.sandbox) {
+    const interceptor = await sendMessageFromPage('get-interceptor-detail', {
+      key: item.key,
+    });
+    const isRequest = ctx instanceof RequestContext;
+    if (!interceptor || !new RegExp(interceptor.regex).test(isRequest ? ctx.url : ctx.request.url)) {
+      return null;
+    }
+    const code = isRequest ? interceptor.request : interceptor.response;
+    const files: any[] = (isRequest ? interceptor.requestFiles : interceptor.responseFiles) || [];
+    const script = `return (async () => {
+  const fn = ${code};
+  return fn(ctx);
+})();`;
+    const debug = async (data: any) => {
+      const value = await sendMessageFromPage('debug', data);
+      Object.assign(data, value);
+    };
+    const fn = new Function('ctx', 'frameURL', 'files', 'sleep', 'debug', script);
+    return await fn(simpleCtx, frameURL, files, sleep, debug);
+  }
+
+  /**
+   * sandbox
+   */
+  const res = await sendMessageFromPage('evaluate-script', {
     key: item.key,
     params: {
-      frameURL: window.location.href,
+      frameURL,
       ctx: simpleCtx,
     },
-  }) as T;
+  });
+  return res as T;
 }
 
 let uninstaller: (() => void)[] = [];
@@ -71,12 +100,12 @@ function reload(interceptors?: { key: string; }[]) {
     uninstaller.push(() => resolved?.());
 
     const req: Middleware<RequestContext> = async (ctx, next) => {
-      const simpleCtx = toSimple(ctx);
+      const before = toSimple(ctx);
       const obj = await Promise.race([
         cancel,
-        evaluateScript<SimpleRequestContext>(item, simpleCtx),
+        evaluateScript<SimpleRequestContext>(item, ctx),
       ]);
-      if (typeof obj !== 'undefined') {
+      if (obj) {
         ctx.url = obj.url;
         ctx.body = typeof ctx.body === 'string' ? obj.body : ctx.body;
         ctx.headers = new Headers(obj.headers);
@@ -84,7 +113,7 @@ function reload(interceptors?: { key: string; }[]) {
           type: 'request',
           id: ctx.id,
           key: item.key,
-          before: simpleCtx as SimpleRequestContext,
+          before: before as SimpleRequestContext,
           after: {
             ...toSimple(ctx),
             timestamp: Date.now(),
@@ -102,18 +131,18 @@ function reload(interceptors?: { key: string; }[]) {
     });
 
     const res: Middleware<ResponseContext> = async (ctx, next) => {
-      const simpleCtx = toSimple(ctx);
+      const before = toSimple(ctx);
       const obj = await Promise.race([
         cancel,
-        evaluateScript<SimpleResponseContext>(item, simpleCtx),
+        evaluateScript<SimpleResponseContext>(item, ctx),
       ]);
-      if (typeof obj !== 'undefined') {
+      if (obj) {
         ctx.body = typeof ctx.body === 'string' ? obj.body : ctx.body;
         emitMessageFromPage('intercept-records', {
           type: 'response',
           id: ctx.id,
           key: item.key,
-          before: simpleCtx as SimpleResponseContext,
+          before: before as SimpleResponseContext,
           after: {
             ...toSimple(ctx),
             timestamp: Date.now(),

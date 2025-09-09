@@ -35,6 +35,7 @@ const generateDefaultItem = () => {
     request: DEFAULT_REQUEST_INTERCEPTOR,
     response: DEFAULT_RESPONSE_INTERCEPTOR,
     enabled: true,
+    sandbox: true,
   };
 };
 

@@ -2,7 +2,7 @@ import React from 'react';
 import Interceptors from './Interceptors';
 import { Box, Tab, Tabs, Grid, styled } from '@mui/material';
 import Form from 'form-pilot';
-import { buildMessage, getInterceptors, isBridgeMessage, randomStr } from '@/utils';
+import { buildMessage, getInterceptor, getInterceptors, isBridgeMessage, randomStr } from '@/utils';
 import { useRuntimeMessageListener } from '@/hooks';
 import { Debug, DebugSwitch } from './Interceptors/Debug';
 import { ConfigProvider } from './Context';
@@ -63,6 +63,14 @@ const SidePanel = () => {
         }),
         '*',
       );
+    })();
+    return true;
+  });
+
+  useRuntimeMessageListener('get-interceptor-detail', (data, __, sendResponse) => {
+    (async () => {
+      const item = await getInterceptor(data.key);
+      sendResponse(item);
     })();
     return true;
   });

@@ -14,11 +14,11 @@ import {
 import type { SimpleRequestContext, SimpleResponseContext } from '../utils';
 import { safeParse } from '../utils';
 import { buildMessage, isBridgeMessage, isMatchType, MESSAGE_REPLY_SUFFIX } from '@/utils';
-import type { BridgeMessage } from '@/utils';
 import type { TransitionProps } from '@mui/material/transitions';
 import Form from 'form-pilot';
 import CodeEditor from '@/components/CodeEditor';
 import { useConfig } from '../Context';
+import { useRuntimeMessageListener } from '@/hooks';
 
 interface TProps extends TransitionProps {
   children: React.ReactElement<unknown>;
@@ -149,10 +149,9 @@ export const Debug = (props: DebugProps) => {
 
   const debugQueueRef = React.useRef<Promise<void>[]>([]);
 
-  const fnRef = React.useRef(async (message: BridgeMessage) => {
+  const fnRef = React.useRef(async (data: any) => {
     const debugQueue = debugQueueRef.current;
     await Promise.all(debugQueue);
-    const data: SimpleRequestContext | SimpleResponseContext = message.data;
     let nextData = data;
     if (enableDebug.current) {
       setData(data);
@@ -176,7 +175,7 @@ export const Debug = (props: DebugProps) => {
     const listener = async (e: MessageEvent) => {
       const message = e.data;
       if (isBridgeMessage(message) && isMatchType(message, 'debug')) {
-        const nextData = fnRef.current(message);
+        const nextData = await fnRef.current(message.data);
         sendToSanboxRef.current(
           buildMessage({
             ...message,
@@ -193,6 +192,18 @@ export const Debug = (props: DebugProps) => {
       window.removeEventListener('message', listener);
     };
   }, []);
+
+  useRuntimeMessageListener('debug', (data, _, sendResponse) => {
+    (async () => {
+      try {
+        const nextData = await fnRef.current(data);
+        sendResponse(nextData);
+      } catch (e) {
+        sendResponse(undefined, `${e}`);
+      }
+    })();
+    return true;
+  });
 
   return (
     <Dialog

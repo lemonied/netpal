@@ -1,7 +1,7 @@
 import Form from 'form-pilot';
 import { FocusBorder } from '@/components/FocusBorder';
 import Collapse from '@/components/Collapse';
-import { Box, Stack, Switch, TextField, Typography } from '@mui/material';
+import { Box, FormControlLabel, Stack, Switch, TextField, Typography } from '@mui/material';
 import { CtxEditor } from './CtxEditor';
 import { Files } from './Files';
 
@@ -56,6 +56,20 @@ const Item = () => {
             </Form.Item>
           </Stack>
         </Stack>
+        <Box>
+          <FormControlLabel
+            control={
+              <Form.Item
+                name="sandbox"
+                valuePropName="checked"
+              >
+                <Switch color="primary" />
+              </Form.Item>
+            }
+            label="Sandbox"
+            labelPlacement="start"
+          />
+        </Box>
         <Collapse
           title={
             <Typography>请求拦截器</Typography>
