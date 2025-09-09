@@ -26,7 +26,7 @@ export async function getInterceptors(): Promise<any[]> {
 
 export async function getClientInterceptors() {
   const interceptors = await getInterceptors();
-  return interceptors.map(item => pick(item, ['key', 'sandbox']));
+  return interceptors.map(item => pick(item, ['key', 'sandbox', 'regex']));
 }
 
 export async function getInterceptor(key: string) {
