@@ -74,8 +74,13 @@ async function evaluateScript<T = any>(item: Record<string, string>, ctx: Reques
         files,
         sleep,
         debug,
-        nativeCtx: ctx,
       };
+      Object.defineProperty(simpleCtx, 'nativeCtx', {
+        enumerable: true,
+        get() {
+          return ctx;
+        },
+      });
       const fn = new Function(...Object.keys(params), script);
       return await fn(...Object.values(params));
     }
