@@ -76,7 +76,7 @@ async function evaluateScript<T = any>(item: Record<string, string>, ctx: Reques
         debug,
       };
       Object.defineProperty(simpleCtx, 'nativeCtx', {
-        enumerable: true,
+        enumerable: false,
         get() {
           return ctx;
         },
