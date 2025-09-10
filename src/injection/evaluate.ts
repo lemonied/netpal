@@ -114,7 +114,7 @@ function reload(interceptors?: any[]) {
 
     const req: Middleware<RequestContext> = async (ctx, next) => {
       const before = toSimple(ctx) as SimpleRequestContext;
-      if (new RegExp(item.regex).test(before.url)) {
+      if (item.enabled && new RegExp(item.regex).test(before.url)) {
         const obj = await Promise.race([
           cancel,
           evaluateScript<SimpleRequestContext>(item, ctx),
@@ -151,7 +151,7 @@ function reload(interceptors?: any[]) {
 
     const res: Middleware<ResponseContext> = async (ctx, next) => {
       const before = toSimple(ctx) as SimpleResponseContext;
-      if (new RegExp(item.regex).test(before.request.url)) {
+      if (item.enabled && new RegExp(item.regex).test(before.request.url)) {
         const obj = await Promise.race([
           cancel,
           evaluateScript<SimpleResponseContext>(item, ctx),

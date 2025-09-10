@@ -40,7 +40,7 @@ const SidePanel = () => {
     (async () => {
       const interceptors = await getInterceptors();
       const interceptor = interceptors.find(v => v.key === data.key);
-      if (!interceptor || !interceptor.enabled) {
+      if (!interceptor) {
         return sendResponse();
       }
       const key = randomStr('eval');
