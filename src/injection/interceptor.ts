@@ -21,12 +21,13 @@ export class RequestContext extends ContextBase {
   }
   constructor(options: Pick<RequestContext, 'type' | 'headers' | 'body' | 'xhr'> & { url: RequestContext['originalUrl'] }) {
     super();
-    const { type, url, headers, body } = options;
+    const { type, url, headers, body, xhr } = options;
     this.type = type;
     this.originalUrl = url;
     this.url = url instanceof window.URL ? url.href : `${url}`;
     this.headers = headers;
     this.body = body;
+    this.xhr = xhr;
   }
 }
 
@@ -44,11 +45,12 @@ export class ResponseContext extends ContextBase {
   readonly response?: Response;
   constructor(options: Pick<ResponseContext, 'body' | 'request' | 'headers' | 'status' | 'response'>) {
     super();
-    const { body, request, headers, status } = options;
+    const { body, request, headers, status, response } = options;
     this.body = body;
     this.request = request;
     this.headers = headers;
     this.status = status;
+    this.response = response;
     this.id = this.request.id;
   }
 }
