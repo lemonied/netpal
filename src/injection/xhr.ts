@@ -97,6 +97,21 @@ class XMLHttpRequest extends OriginalXMLHttpRequest {
             });
             break;
           }
+          default: {
+            responsePending = requestPending.then(ctx => {
+              return compose(window.netpalInterceptors.response)(
+                new ResponseContext({
+                  body: super.response,
+                  request: ctx,
+                  headers: getHeaders(super.getAllResponseHeaders()),
+                  status: super.status,
+                }),
+              );
+            }).then(ctx => {
+              this.internalNetpal.response = ctx.body;
+              return ctx;
+            });
+          }
         }
       }
     });
@@ -157,6 +172,7 @@ class XMLHttpRequest extends OriginalXMLHttpRequest {
         url: this.internalNetpal.requestUrl,
         body,
         headers: new Headers(this.internalNetpal.requestHeaders),
+        xhr: this,
       }),
     ).then((ctx) => {
       this.internalNetpal.requestResolved(ctx);

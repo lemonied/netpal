@@ -68,8 +68,16 @@ async function evaluateScript<T = any>(item: Record<string, string>, ctx: Reques
         const value = await sendMessageFromPage('debug', data);
         Object.assign(data, value);
       };
-      const fn = new Function('ctx', 'frameURL', 'files', 'sleep', 'debug', script);
-      return await fn(simpleCtx, frameURL, files, sleep, debug);
+      const params = {
+        ctx: simpleCtx,
+        frameURL,
+        files,
+        sleep,
+        debug,
+        nativeCtx: ctx,
+      };
+      const fn = new Function(...Object.keys(params), script);
+      return await fn(...Object.values(params));
     }
     return null;
   }

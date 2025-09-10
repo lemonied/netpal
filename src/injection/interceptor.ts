@@ -12,10 +12,14 @@ export class RequestContext extends ContextBase {
   headers: Headers;
   body: any;
   id = randomStr('context');
+  /**
+   * available in xhr type
+   */
+  xhr?: XMLHttpRequest;
   getTransformedURL() {
     return this.originalUrl instanceof window.URL ? new URL(this.url, window.location.href) : this.url;
   }
-  constructor(options: Pick<RequestContext, 'type' | 'headers' | 'body'> & { url: RequestContext['originalUrl'] }) {
+  constructor(options: Pick<RequestContext, 'type' | 'headers' | 'body' | 'xhr'> & { url: RequestContext['originalUrl'] }) {
     super();
     const { type, url, headers, body } = options;
     this.type = type;
@@ -34,7 +38,11 @@ export class ResponseContext extends ContextBase {
   readonly request: Readonly<RequestContext>;
   readonly headers: Headers;
   readonly status: number;
-  constructor(options: Pick<ResponseContext, 'body' | 'request' | 'headers' | 'status'>) {
+  /**
+   * available in fetch type
+   */
+  readonly response?: Response;
+  constructor(options: Pick<ResponseContext, 'body' | 'request' | 'headers' | 'status' | 'response'>) {
     super();
     const { body, request, headers, status } = options;
     this.body = body;

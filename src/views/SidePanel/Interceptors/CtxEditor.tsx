@@ -13,6 +13,7 @@ declare const files: Array<{
 interface RequestContext {
   url: string;
   headers: Record<string, string>;
+  initiator: 'xhr' | 'fetch';
   body?: string;
 }
 function RequestInterceptor(ctx: RequestContext): Promise<RequestContext>;

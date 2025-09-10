@@ -133,6 +133,7 @@ const customFetch: typeof window.fetch = async (input, init) => {
       body: responseBody.value,
       headers: response.headers,
       status: response.status,
+      response,
     }),
   );
   const mergedResponse = new FakeResponse(responseCtx.body, {

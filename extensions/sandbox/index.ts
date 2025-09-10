@@ -25,28 +25,14 @@ return (async (ctx) => {
 })(ctx);
 `;
     try {
-      const mergedParams = Object.keys(params).reduce((pre, key) => {
-        pre.push({
-          label: key,
-          value: params[key],
-        });
-        return pre;
-      }, [
-        {
-          label: 'debug',
-          value: debug,
-        },
-        {
-          label: 'files',
-          value: files,
-        },
-        {
-          label: 'sleep',
-          value: sleep,
-        },
-      ]);
-      const fn = new Function(...mergedParams.map(v => v.label), script);
-      const result = fn(...mergedParams.map(v => v.value));
+      const mergedParams = {
+        ...params,
+        debug,
+        files,
+        sleep,
+      };
+      const fn = new Function(...Object.keys(mergedParams), script);
+      const result = fn(...Object.values(mergedParams));
       window.parent.postMessage({
         type: `${message.type}${MESSAGE_REPLY_SUFFIX}`,
         key,
