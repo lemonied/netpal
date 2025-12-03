@@ -138,7 +138,7 @@ const customFetch: typeof window.fetch = async (input, init) => {
   );
   const mergedResponse = new FakeResponse(responseCtx.body, {
     headers: response.headers,
-    status: response.status,
+    status: response.status || undefined,
     statusText: response.statusText,
   }, {
     url: response.url,
