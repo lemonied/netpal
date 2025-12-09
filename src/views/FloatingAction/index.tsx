@@ -1,5 +1,5 @@
 import { Fab, styled } from '@mui/material';
-import { Add } from '@mui/icons-material';
+import { Rocket } from '@mui/icons-material';
 import {
   useDraggable,
   DndContext,
@@ -58,7 +58,7 @@ const DraggableItem = React.forwardRef<HTMLButtonElement, DraggableItemProps>((p
 
   return (
     <Wrapper
-      size="medium"
+      size="small"
       color="secondary"
       ref={buttonRef}
       style={style}
@@ -66,7 +66,7 @@ const DraggableItem = React.forwardRef<HTMLButtonElement, DraggableItemProps>((p
       {...attributes}
       onClick={onClick}
     >
-      <Add />
+      <Rocket />
     </Wrapper>
   );
 });
